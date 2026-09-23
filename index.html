@@ -269,12 +269,16 @@
 
   <section id="settings">
     <div class="card">
-      <h2>Googleスプレッドシート連携</h2>
-      <p style="font-size:13px; color:var(--text-secondary);">iPhoneショートカットで自動記録したデータをこのダッシュボードに表示するための設定です。Apps ScriptのウェブアプリURLと合言葉を入力してください。</p>
-      <label>ウェブアプリURL</label>
-      <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
-      <label>合言葉（SECRET_KEY）</label>
-      <input type="text" id="gasKeyInput" placeholder="Apps Scriptに設定した合言葉">
+      <h2>GitHub連携</h2>
+      <p style="font-size:13px; color:var(--text-secondary);">iPhoneショートカットで自動記録したデータをこのダッシュボードに表示するための設定です。データはGitHubリポジトリ内の1ファイル（data.json）に保存されます。</p>
+      <label>GitHubユーザー名</label>
+      <input type="text" id="ghOwnerInput" placeholder="例：horikosu">
+      <label>リポジトリ名</label>
+      <input type="text" id="ghRepoInput" placeholder="例：ScaleNote">
+      <label>ファイルパス</label>
+      <input type="text" id="ghPathInput" placeholder="data.json" value="data.json">
+      <label>Personal Access Token（Fine-grained・このリポジトリのContents権限のみ推奨）</label>
+      <input type="password" id="ghTokenInput" placeholder="github_pat_...">
       <button class="primary" id="saveSettingsBtn">保存して同期</button>
       <button class="secondary" id="refreshBtn">今すぐ再取得</button>
       <div class="status-msg" id="settingsStatus"></div>
@@ -282,9 +286,10 @@
     <div class="card">
       <h2>この設定について</h2>
       <p style="font-size:12px; color:var(--text-secondary); line-height:1.6;">
-      ・ここで入力したURL・合言葉は、このブラウザにのみ保存されます（サーバーには送信されません）。<br>
-      ・体重データ自体はGoogleスプレッドシート側に保存されます。<br>
-      ・別の端末でも見たい場合は、同じURL・合言葉をその端末でも入力してください。
+      ・ここで入力した内容は、このブラウザにのみ保存されます（Claudeや他サーバーには送信されません）。<br>
+      ・体重データ自体は、GitHubリポジトリ内の指定したファイルに保存されます。<br>
+      ・トークンはこのリポジトリ専用に権限を絞って発行し、リポジトリはPrivateにしてください。<br>
+      ・別の端末でも見たい場合は、同じ内容をその端末でも入力してください。
       </p>
     </div>
   </section>
@@ -296,6 +301,10 @@ var STORAGE_KEY = 'weightsync_state_v1';
 var state = loadState();
 if(!state.profile) state.profile = { height: null, age: null, gender: 'male', activity: 1.5 };
 if(state.goalDeadline === undefined) state.goalDeadline = null;
+if(!state.ghPath) state.ghPath = 'data.json';
+if(state.ghOwner === undefined) state.ghOwner = '';
+if(state.ghRepo === undefined) state.ghRepo = '';
+if(state.ghToken === undefined) state.ghToken = '';
 // 既存ユーザー（すでに記録がある）は初回オンボーディングをスキップする
 if(state.onboardingDone === undefined) state.onboardingDone = (state.records && state.records.length > 0);
 
@@ -304,7 +313,8 @@ function loadState(){
     var raw = localStorage.getItem(STORAGE_KEY);
     if(raw) return JSON.parse(raw);
   }catch(e){}
-  return { records: [], goalWeight: null, goalDeadline: null, gasUrl: '', gasKey: '', onboardingDone: false,
+  return { records: [], goalWeight: null, goalDeadline: null,
+    ghOwner: '', ghRepo: '', ghPath: 'data.json', ghToken: '', onboardingDone: false,
     profile: { height: null, age: null, gender: 'male', activity: 1.5 } };
 }
 function persistState(){
@@ -321,8 +331,10 @@ document.querySelectorAll('nav.tabs button').forEach(function(btn){
   });
 });
 
-document.getElementById('gasUrlInput').value = state.gasUrl || '';
-document.getElementById('gasKeyInput').value = state.gasKey || '';
+document.getElementById('ghOwnerInput').value = state.ghOwner || '';
+document.getElementById('ghRepoInput').value = state.ghRepo || '';
+document.getElementById('ghPathInput').value = state.ghPath || 'data.json';
+document.getElementById('ghTokenInput').value = state.ghToken || '';
 document.getElementById('goalWeightInput').value = state.goalWeight || '';
 document.getElementById('goalDeadlineInput').value = state.goalDeadline || '';
 document.getElementById('profileHeight').value = state.profile.height || '';
@@ -377,6 +389,8 @@ document.getElementById('obStartBtn').addEventListener('click', function(){
 
   document.getElementById('obResultCard').style.display = 'block';
   document.getElementById('obResultCard').scrollIntoView({ behavior: 'smooth' });
+
+  if(ghConfigured()){ syncToGithub(); }
 });
 
 document.getElementById('obGoDashboardBtn').addEventListener('click', function(){
@@ -393,12 +407,14 @@ document.getElementById('obGoDashboardBtn').addEventListener('click', function()
 });
 
 document.getElementById('saveSettingsBtn').addEventListener('click', function(){
-  state.gasUrl = document.getElementById('gasUrlInput').value.trim();
-  state.gasKey = document.getElementById('gasKeyInput').value.trim();
+  state.ghOwner = document.getElementById('ghOwnerInput').value.trim();
+  state.ghRepo = document.getElementById('ghRepoInput').value.trim();
+  state.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.json';
+  state.ghToken = document.getElementById('ghTokenInput').value.trim();
   persistState();
-  fetchFromGas(true);
+  fetchFromGithub(true);
 });
-document.getElementById('refreshBtn').addEventListener('click', function(){ fetchFromGas(true); });
+document.getElementById('refreshBtn').addEventListener('click', function(){ fetchFromGithub(true); });
 
 function setSettingsStatus(msg, ok){
   var el = document.getElementById('settingsStatus');
@@ -406,35 +422,75 @@ function setSettingsStatus(msg, ok){
   el.className = 'status-msg ' + (ok===true?'ok':ok===false?'err':'');
 }
 
-function fetchFromGas(manual){
-  if(!state.gasUrl || !state.gasKey){
-    if(manual) setSettingsStatus('URLと合言葉を入力してください', false);
+function ghConfigured(){
+  return !!(state.ghOwner && state.ghRepo && state.ghToken);
+}
+
+function ghApiUrl(){
+  return 'https://api.github.com/repos/' + encodeURIComponent(state.ghOwner) + '/' + encodeURIComponent(state.ghRepo) + '/contents/' + state.ghPath;
+}
+
+function ghHeaders(){
+  return {
+    'Authorization': 'Bearer ' + state.ghToken,
+    'Accept': 'application/vnd.github+json'
+  };
+}
+
+// UTF-8安全なBase64エンコード／デコード
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1){
+    return String.fromCharCode('0x' + p1);
+  }));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(atob(str).split('').map(function(c){
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+}
+
+function fetchFromGithub(manual){
+  if(!ghConfigured()){
+    if(manual) setSettingsStatus('GitHubユーザー名・リポジトリ名・トークンを入力してください', false);
     return;
   }
   setSettingsStatus('同期中…');
-  var url = state.gasUrl + (state.gasUrl.indexOf('?')>-1?'&':'?') + 'key=' + encodeURIComponent(state.gasKey);
-  fetch(url).then(function(r){ return r.json(); }).then(function(data){
-    if(data.ok){
-      state.records = data.records || [];
-      persistState();
-      setSettingsStatus('同期しました（' + state.records.length + '件）', true);
-      renderAll();
-    } else {
-      setSettingsStatus('エラー：' + (data.error||'不明なエラー'), false);
+  fetch(ghApiUrl(), { headers: ghHeaders() }).then(function(r){
+    if(r.status === 404){ return { notFound: true }; }
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(data){
+    if(data.notFound){
+      setSettingsStatus('まだdata.jsonがありません（記録を1件保存すると作成されます）', true);
+      return;
     }
+    var json = JSON.parse(b64DecodeUnicode(data.content));
+    state.records = json.records || [];
+    persistState();
+    setSettingsStatus('同期しました（' + state.records.length + '件）', true);
+    renderAll();
   }).catch(function(err){
     setSettingsStatus('通信エラー：' + err, false);
   });
 }
 
-function postToGas(record){
-  if(!state.gasUrl || !state.gasKey) return Promise.resolve(false);
-  var payload = Object.assign({ key: state.gasKey, source: 'manual' }, record);
-  return fetch(state.gasUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  }).then(function(r){ return r.json(); }).then(function(data){ return !!data.ok; }).catch(function(){ return false; });
+// 現在のstate.recordsをそのままdata.jsonとしてGitHubに書き戻す（全件上書き）
+function syncToGithub(){
+  if(!ghConfigured()) return Promise.resolve(false);
+  return fetch(ghApiUrl(), { headers: ghHeaders() }).then(function(r){
+    if(r.status === 404) return null;
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(current){
+    var content = b64EncodeUnicode(JSON.stringify({ records: state.records }, null, 2));
+    var body = { message: 'ScaleNote: update data.json', content: content };
+    if(current && current.sha) body.sha = current.sha;
+    return fetch(ghApiUrl(), {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders()),
+      body: JSON.stringify(body)
+    });
+  }).then(function(r){ return r && r.ok; }).catch(function(){ return false; });
 }
 
 document.getElementById('addBtn').addEventListener('click', function(){
@@ -457,10 +513,10 @@ document.getElementById('addBtn').addEventListener('click', function(){
   renderAll();
   statusEl.textContent = '記録しました';
   statusEl.className = 'status-msg ok';
-  if(state.gasUrl && state.gasKey){
-    postToGas(rec).then(function(ok){
-      if(ok){ statusEl.textContent = '記録しました（スプレッドシートにも保存済み）'; }
-      else { statusEl.textContent = '記録しました（この端末のみ。スプレッドシートへの保存に失敗しました）'; statusEl.className='status-msg err'; }
+  if(ghConfigured()){
+    syncToGithub().then(function(ok){
+      if(ok){ statusEl.textContent = '記録しました（GitHubにも保存済み）'; }
+      else { statusEl.textContent = '記録しました（この端末のみ。GitHubへの保存に失敗しました）'; statusEl.className='status-msg err'; }
     });
   }
 });
@@ -491,6 +547,7 @@ function deleteRecord(date){
   state.records = state.records.filter(function(r){ return r.date !== date; });
   persistState();
   renderAll();
+  if(ghConfigured()){ syncToGithub(); }
 }
 
 var KCAL_PER_KG = 7200; // 体脂肪1kgあたりの概算カロリー（一般的な目安値）
@@ -678,7 +735,7 @@ function renderAll(){
 
 showOnboardingIfNeeded();
 renderAll();
-if(state.gasUrl && state.gasKey){ fetchFromGas(false); }
+if(ghConfigured()){ fetchFromGithub(false); }
 </script>
 </body>
 </html>
