@@ -63,7 +63,8 @@
   .progress-bar{height:100%; background:linear-gradient(90deg,var(--series-1),var(--series-3)); border-radius:999px; transition:width .3s;}
   .progress-label{display:flex; justify-content:space-between; font-size:12px; color:var(--text-secondary); margin-top:6px;}
   .progress-pct{font-size:22px; font-weight:700; margin-top:10px;}
-  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .row2{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px;}
+  .row2 input{min-width:0;}
   .pfc-cal{text-align:center; padding:14px 0 6px;}
   .pfc-cal .num{font-size:26px; font-weight:700; color:var(--series-1);}
   .pfc-cal .cap{font-size:12px; color:var(--text-secondary);}
