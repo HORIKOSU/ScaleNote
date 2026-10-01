@@ -55,6 +55,9 @@
   table.trend-table th, table.trend-table td{padding:8px 6px; border-bottom:1px solid var(--border); text-align:right; white-space:nowrap;}
   table.trend-table th:first-child, table.trend-table td:first-child{text-align:left;}
   .trend-table-wrap{max-height:340px; overflow-y:auto;}
+  .trend-legend{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:11px; color:var(--text-secondary); margin-bottom:10px;}
+  .trend-legend-item{display:inline-flex; align-items:center; gap:4px; white-space:nowrap;}
+  .trend-dot{display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0;}
   .motivation-card{background:linear-gradient(135deg,#fff7ea,#ffffff); border:1px solid var(--border);}
   .motivation-banner{background:linear-gradient(90deg,#ffd76a,#ff9f43); color:#5a3c00; font-weight:700; font-size:13px; text-align:center; padding:10px; border-radius:12px; margin-bottom:14px;}
   .motivation-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
@@ -62,6 +65,7 @@
   .motivation-icon{font-size:22px; line-height:1;}
   .motivation-value{font-size:17px; font-weight:800; margin-top:4px;}
   .motivation-label{font-size:10px; color:var(--text-secondary); margin-top:2px;}
+  .motivation-date{font-size:10px; color:var(--text-secondary); margin-top:1px;}
   label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px; margin-top:10px;}
   input, select{width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:16px; background:#fff;}
   button.primary{width:100%; margin-top:14px; padding:12px; border:none; border-radius:999px; background:var(--series-1); color:#fff; font-weight:700; font-size:14px; cursor:pointer;}
@@ -74,8 +78,8 @@
   .hist-row .d{font-size:12px; color:var(--text-secondary);}
   .hist-row .w{font-size:16px; font-weight:700;}
   .hist-row .del{border:none; background:none; color:#c0392b; font-size:12px; cursor:pointer;}
-  .chart-wrap{position:relative; height:260px;}
-  .rate-chart-wrap{position:relative; height:150px; margin-bottom:14px;}
+  .chart-wrap{position:relative; height:380px;}
+  .rate-chart-wrap{position:relative; height:240px; margin-bottom:14px;}
   .goal-note{font-size:13px; margin-top:10px; padding:10px 12px; background:#eef5ff; border-radius:10px;}
   .empty-note{font-size:13px; color:var(--text-secondary); text-align:center; padding:20px 0;}
   .progress-wrap{margin-top:12px;}
@@ -86,7 +90,10 @@
   .row2{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px;}
   .row2 > div{min-width:0;}
   .row2 input, .row2 select{min-width:0; max-width:100%; width:100%; box-sizing:border-box;}
-  input[type=date]{min-width:0; max-width:100%;}
+  input[type=date]{min-width:0; max-width:100%; width:100%; box-sizing:border-box; padding:10px 8px;}
+  @media (max-width:400px){
+    input[type=date]{font-size:14px; padding:9px 6px;}
+  }
   .pfc-cal{text-align:center; padding:14px 0 6px;}
   .pfc-cal .num{font-size:26px; font-weight:700; color:var(--series-1);}
   .pfc-cal .cap{font-size:12px; color:var(--text-secondary);}
@@ -211,6 +218,7 @@
         <div class="motivation-item">
           <div class="motivation-icon">🏆</div>
           <div class="motivation-value" id="bestWeightValue">-</div>
+          <div class="motivation-date" id="bestWeightDate"></div>
           <div class="motivation-label">自己ベスト</div>
         </div>
         <div class="motivation-item">
@@ -246,7 +254,17 @@
         <button data-granularity="month" class="active">月別</button>
         <button data-granularity="year">年別</button>
       </div>
+      <div class="period-filter" id="trendChartType">
+        <button data-chart="rate" class="active">記録達成率</button>
+        <button data-chart="avg">平均体重</button>
+      </div>
       <div class="rate-chart-wrap" id="rateChartWrap"><canvas id="rateChart"></canvas></div>
+      <div class="trend-legend" id="trendLegend">
+        <span class="trend-legend-item"><span class="trend-dot" style="background:var(--series-3);"></span>記録率90%以上</span>
+        <span class="trend-legend-item"><span class="trend-dot" style="background:var(--series-4);"></span>記録率70〜89%</span>
+        <span class="trend-legend-item"><span class="trend-dot" style="background:var(--series-2);"></span>記録率70%未満・体重増加</span>
+        <span class="trend-legend-item"><span class="trend-dot" style="background:var(--series-3);"></span>体重減少（前比）</span>
+      </div>
       <div class="trend-table-wrap">
         <table class="trend-table" id="trendTable">
           <thead><tr><th>期間</th><th>平均体重</th><th id="trendDiffHeader">前比</th><th>件数</th><th>記録率</th></tr></thead>
@@ -256,16 +274,10 @@
     </div>
     <div class="card">
       <h2>目標体重・期限</h2>
-      <div class="row2">
-        <div>
-          <label>目標体重 (kg)</label>
-          <input type="number" step="0.1" id="goalWeightInput" placeholder="例：65.0">
-        </div>
-        <div>
-          <label>期限</label>
-          <input type="date" id="goalDeadlineInput">
-        </div>
-      </div>
+      <label>目標体重 (kg)</label>
+      <input type="number" step="0.1" id="goalWeightInput" placeholder="例：65.0">
+      <label>期限</label>
+      <input type="date" id="goalDeadlineInput">
       <button class="primary" id="saveGoalBtn">目標を保存</button>
       <div class="progress-wrap" id="progressWrap" style="display:none;">
         <div class="progress-pct" id="progressPct">-</div>
@@ -703,6 +715,7 @@ var chartInstance = null;
 var rateChartInstance = null;
 var chartPeriod = '3m';
 var tableGranularity = 'month';
+var trendChartType = 'rate';
 var customRange = { start: null, end: null };
 
 function computeStreak(records){
@@ -727,11 +740,13 @@ function renderMotivation(records){
   var banner = document.getElementById('motivationBanner');
   var streakEl = document.getElementById('streakValue');
   var bestEl = document.getElementById('bestWeightValue');
+  var bestDateEl = document.getElementById('bestWeightDate');
   var changeEl = document.getElementById('totalChangeValue');
   if(!records.length){
     banner.style.display = 'none';
     streakEl.textContent = '0';
     bestEl.textContent = '-';
+    bestDateEl.textContent = '';
     changeEl.textContent = '-';
     return;
   }
@@ -743,6 +758,8 @@ function renderMotivation(records){
 
   streakEl.textContent = streak;
   bestEl.textContent = best.weight.toFixed(1) + 'kg';
+  var bp = best.date.split('-');
+  bestDateEl.textContent = bp[0] + '/' + parseInt(bp[1],10) + '/' + parseInt(bp[2],10) + '時点';
   changeEl.textContent = (change > 0 ? '+' : '') + change.toFixed(1) + 'kg';
   changeEl.style.color = change < 0 ? 'var(--series-3)' : (change > 0 ? 'var(--series-2)' : '');
 
@@ -844,43 +861,83 @@ function totalDaysForBucket(label, granularity){
 
 function renderRateChart(records){
   var wrap = document.getElementById('rateChartWrap');
-  if(tableGranularity === 'day'){
-    wrap.style.display = 'none';
-    return;
+  var legend = document.getElementById('trendLegend');
+
+  if(trendChartType === 'rate' && tableGranularity === 'day'){
+    // 記録達成率は日別だと意味を持たないため、平均体重に切り替える
+    trendChartType = 'avg';
+    document.querySelectorAll('#trendChartType button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.chart === 'avg');
+    });
   }
+
   wrap.style.display = 'block';
   var data = aggregateByGranularity(records, tableGranularity).slice().reverse();
   var labels = data.map(function(d){ return formatTrendLabel(d.label, tableGranularity); });
-  var rates = data.map(function(d){
-    var total = totalDaysForBucket(d.label, tableGranularity);
-    return total > 0 ? Math.round((d.count / total) * 100) : 0;
-  });
-  var colors = rates.map(function(r){ return r >= 90 ? '#3fa66a' : (r >= 70 ? '#e0a92e' : '#eb6834'); });
   var ctx2 = document.getElementById('rateChart').getContext('2d');
   if(rateChartInstance) rateChartInstance.destroy();
-  rateChartInstance = new Chart(ctx2, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: '記録達成率(%)',
-        data: rates,
-        backgroundColor: colors,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: function(ctx){ return ctx.parsed.y + '%'; } } }
+
+  if(trendChartType === 'rate'){
+    legend.style.display = 'flex';
+    var rates = data.map(function(d){
+      var total = totalDaysForBucket(d.label, tableGranularity);
+      return total > 0 ? Math.round((d.count / total) * 100) : 0;
+    });
+    var colors = rates.map(function(r){ return r >= 90 ? '#3fa66a' : (r >= 70 ? '#e0a92e' : '#eb6834'); });
+    rateChartInstance = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '記録達成率(%)',
+          data: rates,
+          backgroundColor: colors,
+          borderRadius: 4
+        }]
       },
-      scales: {
-        y: { min: 0, max: 100, ticks: { font: { size: 10 }, callback: function(v){ return v + '%'; } } },
-        x: { ticks: { font: { size: 10 } } }
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx){ return ctx.parsed.y + '%'; } } }
+        },
+        scales: {
+          y: { min: 0, max: 100, ticks: { font: { size: 10 }, callback: function(v){ return v + '%'; } } },
+          x: { ticks: { font: { size: 10 } } }
+        }
       }
-    }
-  });
+    });
+  } else {
+    legend.style.display = 'none';
+    var avgs = data.map(function(d){ return Number(d.avg.toFixed(1)); });
+    rateChartInstance = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '平均体重(kg)',
+          data: avgs,
+          borderColor: '#2a78d6',
+          backgroundColor: 'rgba(42,120,214,0.12)',
+          tension: 0.3,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx){ return ctx.parsed.y.toFixed(1) + 'kg'; } } }
+        },
+        scales: {
+          y: { ticks: { font: { size: 10 } } },
+          x: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  }
 }
 
 function renderTrendTable(records){
@@ -1031,9 +1088,20 @@ function renderAll(){
       plugins: {
         legend: { display: true, labels: { font: { size: 11 } } },
         tooltip: {
+          filter: function(item){ return item.dataset.label !== '目標'; },
           callbacks: {
             title: function(items){ return items.length ? fullDates[items[0].dataIndex] : ''; },
-            label: function(ctx){ return ctx.dataset.label + '：' + ctx.parsed.y.toFixed(1) + 'kg'; }
+            label: function(ctx){
+              var idx = ctx.dataIndex;
+              var diffText = '';
+              if(idx > 0){
+                var diff = weights[idx] - weights[idx-1];
+                var sign = diff > 0 ? '+' : '';
+                var diffLabel = useWeekly ? '前週比' : '前日比';
+                diffText = '（' + diffLabel + ' ' + sign + diff.toFixed(1) + 'kg）';
+              }
+              return ctx.dataset.label + '：' + ctx.parsed.y.toFixed(1) + 'kg' + diffText;
+            }
           }
         }
       },
@@ -1084,6 +1152,13 @@ document.querySelectorAll('#tableGranularity button').forEach(function(btn){
   btn.addEventListener('click', function(){
     tableGranularity = btn.dataset.granularity;
     document.querySelectorAll('#tableGranularity button').forEach(function(b){ b.classList.toggle('active', b === btn); });
+    renderAll();
+  });
+});
+document.querySelectorAll('#trendChartType button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    trendChartType = btn.dataset.chart;
+    document.querySelectorAll('#trendChartType button').forEach(function(b){ b.classList.toggle('active', b === btn); });
     renderAll();
   });
 });
