@@ -46,10 +46,21 @@
   .period-filter{display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;}
   .period-filter button{border:1px solid var(--border); background:#fff; color:var(--text-secondary); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;}
   .period-filter button.active{background:var(--series-1); color:#fff; border-color:var(--series-1);}
+  .custom-range-row{display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap;}
+  .custom-range-row input[type=date]{width:auto; flex:1; min-width:120px; padding:8px 10px;}
+  .custom-range-row span{color:var(--text-secondary); font-size:12px;}
+  .custom-range-row button{width:auto; padding:8px 16px; border:none; border-radius:999px; background:var(--series-1); color:#fff; font-weight:700; font-size:12px; cursor:pointer; flex-shrink:0;}
   table.trend-table{width:100%; border-collapse:collapse; font-size:13px;}
   table.trend-table th, table.trend-table td{padding:8px 6px; border-bottom:1px solid var(--border); text-align:right; white-space:nowrap;}
   table.trend-table th:first-child, table.trend-table td:first-child{text-align:left;}
   .trend-table-wrap{max-height:340px; overflow-y:auto;}
+  .motivation-card{background:linear-gradient(135deg,#fff7ea,#ffffff); border:1px solid var(--border);}
+  .motivation-banner{background:linear-gradient(90deg,#ffd76a,#ff9f43); color:#5a3c00; font-weight:700; font-size:13px; text-align:center; padding:10px; border-radius:12px; margin-bottom:14px;}
+  .motivation-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .motivation-item{text-align:center;}
+  .motivation-icon{font-size:22px; line-height:1;}
+  .motivation-value{font-size:17px; font-weight:800; margin-top:4px;}
+  .motivation-label{font-size:10px; color:var(--text-secondary); margin-top:2px;}
   label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px; margin-top:10px;}
   input, select{width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:16px; background:#fff;}
   button.primary{width:100%; margin-top:14px; padding:12px; border:none; border-radius:999px; background:var(--series-1); color:#fff; font-weight:700; font-size:14px; cursor:pointer;}
@@ -185,6 +196,26 @@
       <div class="stat-tile"><div class="label">7日平均</div><div class="value" id="stat7d">-</div></div>
       <div class="stat-tile"><div class="label">目標まで</div><div class="value" id="statGoal">-</div></div>
     </div>
+    <div class="card motivation-card" id="motivationCard">
+      <div class="motivation-banner" id="motivationBanner" style="display:none;"></div>
+      <div class="motivation-row">
+        <div class="motivation-item">
+          <div class="motivation-icon">🔥</div>
+          <div class="motivation-value" id="streakValue">0</div>
+          <div class="motivation-label">日連続記録</div>
+        </div>
+        <div class="motivation-item">
+          <div class="motivation-icon">🏆</div>
+          <div class="motivation-value" id="bestWeightValue">-</div>
+          <div class="motivation-label">自己ベスト</div>
+        </div>
+        <div class="motivation-item">
+          <div class="motivation-icon">📉</div>
+          <div class="motivation-value" id="totalChangeValue">-</div>
+          <div class="motivation-label">スタートから</div>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <h2>体重の推移</h2>
       <div class="period-filter" id="periodFilter">
@@ -193,6 +224,13 @@
         <button data-period="6m">6ヶ月</button>
         <button data-period="1y">1年</button>
         <button data-period="all">全期間</button>
+        <button data-period="custom">期間指定</button>
+      </div>
+      <div class="custom-range-row" id="customRangeRow" style="display:none;">
+        <input type="date" id="customRangeStart">
+        <span>〜</span>
+        <input type="date" id="customRangeEnd">
+        <button id="applyCustomRange">適用</button>
       </div>
       <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
     </div>
@@ -205,7 +243,7 @@
       </div>
       <div class="trend-table-wrap">
         <table class="trend-table" id="trendTable">
-          <thead><tr><th>期間</th><th>平均体重</th><th>件数</th></tr></thead>
+          <thead><tr><th>期間</th><th>平均体重</th><th>件数</th><th>記録率</th></tr></thead>
           <tbody id="trendTableBody"></tbody>
         </table>
       </div>
@@ -658,8 +696,69 @@ function renderPfc(latest){
 var chartInstance = null;
 var chartPeriod = '3m';
 var tableGranularity = 'month';
+var customRange = { start: null, end: null };
+
+function computeStreak(records){
+  if(!records.length) return 0;
+  var dateSet = {};
+  records.forEach(function(r){ dateSet[r.date] = true; });
+  var streak = 0;
+  var cursor = new Date(records[records.length-1].date);
+  while(true){
+    var key = cursor.toISOString().slice(0,10);
+    if(dateSet[key]){
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function renderMotivation(records){
+  var banner = document.getElementById('motivationBanner');
+  var streakEl = document.getElementById('streakValue');
+  var bestEl = document.getElementById('bestWeightValue');
+  var changeEl = document.getElementById('totalChangeValue');
+  if(!records.length){
+    banner.style.display = 'none';
+    streakEl.textContent = '0';
+    bestEl.textContent = '-';
+    changeEl.textContent = '-';
+    return;
+  }
+  var latest = records[records.length-1];
+  var best = records.reduce(function(min,r){ return r.weight < min.weight ? r : min; }, records[0]);
+  var start = records[0];
+  var change = latest.weight - start.weight;
+  var streak = computeStreak(records);
+
+  streakEl.textContent = streak;
+  bestEl.textContent = best.weight.toFixed(1) + 'kg';
+  changeEl.textContent = (change > 0 ? '+' : '') + change.toFixed(1) + 'kg';
+  changeEl.style.color = change < 0 ? 'var(--series-3)' : (change > 0 ? 'var(--series-2)' : '');
+
+  var isNewBest = latest.date === best.date && records.length > 1;
+  if(isNewBest){
+    banner.style.display = 'block';
+    banner.textContent = '🎉 自己ベスト更新！ ' + latest.weight.toFixed(1) + 'kgは記録開始から最軽量です！';
+  } else if(streak >= 7 && streak % 7 === 0){
+    banner.style.display = 'block';
+    banner.textContent = '🔥 ' + streak + '日連続記録達成！この調子で続けましょう！';
+  } else {
+    banner.style.display = 'none';
+  }
+}
 
 function filterByPeriod(records, period){
+  if(period === 'custom'){
+    return records.filter(function(r){
+      if(customRange.start && r.date < customRange.start) return false;
+      if(customRange.end && r.date > customRange.end) return false;
+      return true;
+    });
+  }
   if(period === 'all') return records;
   var days = {'1m':30,'3m':90,'6m':180,'1y':365}[period];
   var cutoff = new Date();
@@ -715,15 +814,43 @@ function formatTrendLabel(label, granularity){
   return label;
 }
 
+function totalDaysForBucket(label, granularity){
+  var today = new Date();
+  if(granularity === 'year'){
+    var year = parseInt(label,10);
+    if(year === today.getFullYear()){
+      var start = new Date(year,0,1);
+      return Math.floor((today - start) / 86400000) + 1;
+    }
+    return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
+  }
+  if(granularity === 'month'){
+    var parts = label.split('-');
+    var y = parseInt(parts[0],10), m = parseInt(parts[1],10);
+    if(y === today.getFullYear() && m === (today.getMonth()+1)){
+      return today.getDate();
+    }
+    return new Date(y, m, 0).getDate();
+  }
+  return 1;
+}
+
 function renderTrendTable(records){
   var data = aggregateByGranularity(records, tableGranularity);
   var body = document.getElementById('trendTableBody');
   if(!data.length){
-    body.innerHTML = '<tr><td colspan="3" class="empty-note">データがありません</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" class="empty-note">データがありません</td></tr>';
     return;
   }
   body.innerHTML = data.map(function(d){
-    return '<tr><td>' + formatTrendLabel(d.label, tableGranularity) + '</td><td>' + d.avg.toFixed(1) + 'kg</td><td>' + d.count + '件</td></tr>';
+    var rateCell = '-';
+    if(tableGranularity !== 'day'){
+      var total = totalDaysForBucket(d.label, tableGranularity);
+      var pct = total > 0 ? Math.round((d.count / total) * 100) : 0;
+      var color = pct >= 90 ? 'var(--series-3)' : (pct >= 70 ? 'var(--series-4)' : 'var(--series-2)');
+      rateCell = '<span style="color:' + color + '; font-weight:700;">' + pct + '%</span><br><span style="font-size:11px; color:var(--text-secondary);">' + d.count + '/' + total + '日</span>';
+    }
+    return '<tr><td>' + formatTrendLabel(d.label, tableGranularity) + '</td><td>' + d.avg.toFixed(1) + 'kg</td><td>' + d.count + '件</td><td>' + rateCell + '</td></tr>';
   }).join('');
 }
 
@@ -787,12 +914,20 @@ function renderAll(){
   // 毎日のPFC目安
   renderPfc(latest);
 
+  // モチベーション表示
+  renderMotivation(records);
+
   // グラフ
   var ctx = document.getElementById('weightChart').getContext('2d');
   var periodRecords = filterByPeriod(records, chartPeriod);
   var useWeekly = (chartPeriod === '6m' || chartPeriod === '1y' || chartPeriod === 'all');
+  if(chartPeriod === 'custom' && periodRecords.length > 1){
+    var spanDays = (new Date(periodRecords[periodRecords.length-1].date) - new Date(periodRecords[0].date)) / 86400000;
+    useWeekly = spanDays > 180;
+  }
   var chartRecords = useWeekly ? aggregateWeekly(periodRecords) : periodRecords;
   var labels = chartRecords.map(function(r){ return r.date.slice(5); });
+  var fullDates = chartRecords.map(function(r){ return r.date; });
   var weights = chartRecords.map(function(r){ return r.weight; });
   var ptRadius = chartRecords.length > 60 ? 0 : 3;
   if(chartInstance) chartInstance.destroy();
@@ -807,18 +942,30 @@ function renderAll(){
         backgroundColor: 'rgba(42,120,214,0.12)',
         tension: 0.3,
         fill: true,
-        pointRadius: ptRadius
+        pointRadius: ptRadius,
+        pointHoverRadius: 5,
+        pointHitRadius: 12
       }].concat(state.goalWeight ? [{
         label: '目標',
         data: weights.map(function(){ return state.goalWeight; }),
         borderColor: '#eb6834',
         borderDash: [6,4],
-        pointRadius: 0
+        pointRadius: 0,
+        pointHoverRadius: 0
       }] : [])
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: true, labels: { font: { size: 11 } } } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, labels: { font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            title: function(items){ return items.length ? fullDates[items[0].dataIndex] : ''; },
+            label: function(ctx){ return ctx.dataset.label + '：' + ctx.parsed.y.toFixed(1) + 'kg'; }
+          }
+        }
+      },
       scales: { y: { ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 10 } } } }
     }
   });
@@ -842,10 +989,24 @@ function renderAll(){
 
 document.querySelectorAll('#periodFilter button').forEach(function(btn){
   btn.addEventListener('click', function(){
-    chartPeriod = btn.dataset.period;
+    var period = btn.dataset.period;
     document.querySelectorAll('#periodFilter button').forEach(function(b){ b.classList.toggle('active', b === btn); });
-    renderAll();
+    if(period === 'custom'){
+      document.getElementById('customRangeRow').style.display = 'flex';
+      chartPeriod = 'custom';
+      if(customRange.start || customRange.end) renderAll();
+    } else {
+      document.getElementById('customRangeRow').style.display = 'none';
+      chartPeriod = period;
+      renderAll();
+    }
   });
+});
+document.getElementById('applyCustomRange').addEventListener('click', function(){
+  customRange.start = document.getElementById('customRangeStart').value || null;
+  customRange.end = document.getElementById('customRangeEnd').value || null;
+  chartPeriod = 'custom';
+  renderAll();
 });
 document.querySelectorAll('#tableGranularity button').forEach(function(btn){
   btn.addEventListener('click', function(){
