@@ -43,6 +43,13 @@
   .stat-tile{background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center;}
   .stat-tile .label{font-size:11px; color:var(--text-secondary);}
   .stat-tile .value{font-size:20px; font-weight:700; margin-top:4px;}
+  .period-filter{display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;}
+  .period-filter button{border:1px solid var(--border); background:#fff; color:var(--text-secondary); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;}
+  .period-filter button.active{background:var(--series-1); color:#fff; border-color:var(--series-1);}
+  table.trend-table{width:100%; border-collapse:collapse; font-size:13px;}
+  table.trend-table th, table.trend-table td{padding:8px 6px; border-bottom:1px solid var(--border); text-align:right; white-space:nowrap;}
+  table.trend-table th:first-child, table.trend-table td:first-child{text-align:left;}
+  .trend-table-wrap{max-height:340px; overflow-y:auto;}
   label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px; margin-top:10px;}
   input, select{width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:16px; background:#fff;}
   button.primary{width:100%; margin-top:14px; padding:12px; border:none; border-radius:999px; background:var(--series-1); color:#fff; font-weight:700; font-size:14px; cursor:pointer;}
@@ -180,7 +187,28 @@
     </div>
     <div class="card">
       <h2>体重の推移</h2>
+      <div class="period-filter" id="periodFilter">
+        <button data-period="1m">1ヶ月</button>
+        <button data-period="3m" class="active">3ヶ月</button>
+        <button data-period="6m">6ヶ月</button>
+        <button data-period="1y">1年</button>
+        <button data-period="all">全期間</button>
+      </div>
       <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>推移テーブル</h2>
+      <div class="period-filter" id="tableGranularity">
+        <button data-granularity="day">日別</button>
+        <button data-granularity="month" class="active">月別</button>
+        <button data-granularity="year">年別</button>
+      </div>
+      <div class="trend-table-wrap">
+        <table class="trend-table" id="trendTable">
+          <thead><tr><th>期間</th><th>平均体重</th><th>件数</th></tr></thead>
+          <tbody id="trendTableBody"></tbody>
+        </table>
+      </div>
     </div>
     <div class="card">
       <h2>目標体重・期限</h2>
@@ -628,6 +656,77 @@ function renderPfc(latest){
 }
 
 var chartInstance = null;
+var chartPeriod = '3m';
+var tableGranularity = 'month';
+
+function filterByPeriod(records, period){
+  if(period === 'all') return records;
+  var days = {'1m':30,'3m':90,'6m':180,'1y':365}[period];
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  var cutoffStr = cutoff.toISOString().slice(0,10);
+  return records.filter(function(r){ return r.date >= cutoffStr; });
+}
+
+function aggregateWeekly(records){
+  var groups = {};
+  records.forEach(function(r){
+    var d = new Date(r.date);
+    var day = d.getDay();
+    var diffToMonday = (day === 0 ? -6 : 1 - day);
+    var monday = new Date(d);
+    monday.setDate(d.getDate() + diffToMonday);
+    var key = monday.toISOString().slice(0,10);
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(r.weight);
+  });
+  var keys = Object.keys(groups).sort();
+  return keys.map(function(k){
+    var arr = groups[k];
+    var avg = arr.reduce(function(s,w){return s+w;},0) / arr.length;
+    return { date: k, weight: avg };
+  });
+}
+
+function aggregateByGranularity(records, granularity){
+  var groups = {};
+  records.forEach(function(r){
+    var key;
+    if(granularity === 'day') key = r.date;
+    else if(granularity === 'month') key = r.date.slice(0,7);
+    else key = r.date.slice(0,4);
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(r.weight);
+  });
+  var keys = Object.keys(groups).sort().reverse();
+  return keys.map(function(k){
+    var arr = groups[k];
+    var avg = arr.reduce(function(s,w){return s+w;},0) / arr.length;
+    return { label: k, avg: avg, count: arr.length };
+  });
+}
+
+function formatTrendLabel(label, granularity){
+  if(granularity === 'year') return label + '年';
+  if(granularity === 'month'){
+    var parts = label.split('-');
+    return parts[0] + '年' + parseInt(parts[1],10) + '月';
+  }
+  return label;
+}
+
+function renderTrendTable(records){
+  var data = aggregateByGranularity(records, tableGranularity);
+  var body = document.getElementById('trendTableBody');
+  if(!data.length){
+    body.innerHTML = '<tr><td colspan="3" class="empty-note">データがありません</td></tr>';
+    return;
+  }
+  body.innerHTML = data.map(function(d){
+    return '<tr><td>' + formatTrendLabel(d.label, tableGranularity) + '</td><td>' + d.avg.toFixed(1) + 'kg</td><td>' + d.count + '件</td></tr>';
+  }).join('');
+}
+
 function renderAll(){
   var records = (state.records || []).slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
 
@@ -690,8 +789,12 @@ function renderAll(){
 
   // グラフ
   var ctx = document.getElementById('weightChart').getContext('2d');
-  var labels = records.map(function(r){ return r.date.slice(5); });
-  var weights = records.map(function(r){ return r.weight; });
+  var periodRecords = filterByPeriod(records, chartPeriod);
+  var useWeekly = (chartPeriod === '6m' || chartPeriod === '1y' || chartPeriod === 'all');
+  var chartRecords = useWeekly ? aggregateWeekly(periodRecords) : periodRecords;
+  var labels = chartRecords.map(function(r){ return r.date.slice(5); });
+  var weights = chartRecords.map(function(r){ return r.weight; });
+  var ptRadius = chartRecords.length > 60 ? 0 : 3;
   if(chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
     type: 'line',
@@ -704,7 +807,7 @@ function renderAll(){
         backgroundColor: 'rgba(42,120,214,0.12)',
         tension: 0.3,
         fill: true,
-        pointRadius: 3
+        pointRadius: ptRadius
       }].concat(state.goalWeight ? [{
         label: '目標',
         data: weights.map(function(){ return state.goalWeight; }),
@@ -720,6 +823,9 @@ function renderAll(){
     }
   });
 
+  // 推移テーブル
+  renderTrendTable(records);
+
   // 履歴
   var histEl = document.getElementById('histList');
   if(!records.length){
@@ -733,6 +839,21 @@ function renderAll(){
     });
   }
 }
+
+document.querySelectorAll('#periodFilter button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    chartPeriod = btn.dataset.period;
+    document.querySelectorAll('#periodFilter button').forEach(function(b){ b.classList.toggle('active', b === btn); });
+    renderAll();
+  });
+});
+document.querySelectorAll('#tableGranularity button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    tableGranularity = btn.dataset.granularity;
+    document.querySelectorAll('#tableGranularity button').forEach(function(b){ b.classList.toggle('active', b === btn); });
+    renderAll();
+  });
+});
 
 showOnboardingIfNeeded();
 renderAll();
