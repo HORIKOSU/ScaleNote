@@ -231,6 +231,7 @@
     <div class="card">
       <h2>体重の推移</h2>
       <div class="period-filter" id="periodFilter">
+        <button data-period="1w">1週間</button>
         <button data-period="1m">1ヶ月</button>
         <button data-period="3m" class="active">3ヶ月</button>
         <button data-period="6m">6ヶ月</button>
@@ -784,7 +785,7 @@ function filterByPeriod(records, period){
     });
   }
   if(period === 'all') return records;
-  var days = {'1m':30,'3m':90,'6m':180,'1y':365}[period];
+  var days = {'1w':7,'1m':30,'3m':90,'6m':180,'1y':365}[period];
   var cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   var cutoffStr = cutoff.toISOString().slice(0,10);
