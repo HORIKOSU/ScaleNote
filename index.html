@@ -551,10 +551,12 @@ function fetchFromGithub(manual){
       return;
     }
     var json = JSON.parse(b64DecodeUnicode(data.content));
-    state.records = json.records || [];
+    var newRecords = json.records || [];
+    var changed = JSON.stringify(newRecords) !== JSON.stringify(state.records);
+    state.records = newRecords;
     persistState();
     setSettingsStatus('同期しました（' + state.records.length + '件）', true);
-    renderAll();
+    if(changed) renderAll();
   }).catch(function(err){
     setSettingsStatus('通信エラー：' + err, false);
   });
