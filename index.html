@@ -43,6 +43,7 @@
   .stat-tile{background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center;}
   .stat-tile .label{font-size:11px; color:var(--text-secondary);}
   .stat-tile .value{font-size:20px; font-weight:700; margin-top:4px;}
+  .stat-tile .date{font-size:10px; color:var(--text-secondary); margin-top:2px; min-height:12px;}
   .period-filter{display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;}
   .period-filter button{border:1px solid var(--border); background:#fff; color:var(--text-secondary); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;}
   .period-filter button.active{background:var(--series-1); color:#fff; border-color:var(--series-1);}
@@ -203,7 +204,7 @@
 
   <section id="dashboard" class="active">
     <div class="stat-row">
-      <div class="stat-tile"><div class="label">最新体重</div><div class="value" id="statLatest">-</div></div>
+      <div class="stat-tile"><div class="label">最新体重</div><div class="value" id="statLatest">-</div><div class="date" id="statLatestDate"></div></div>
       <div class="stat-tile"><div class="label">7日平均</div><div class="value" id="stat7d">-</div></div>
       <div class="stat-tile"><div class="label">目標まで</div><div class="value" id="statGoal">-</div></div>
     </div>
@@ -977,6 +978,13 @@ function renderAll(){
   // 統計
   var latest = records.length ? records[records.length-1] : null;
   document.getElementById('statLatest').textContent = latest ? latest.weight.toFixed(1) + 'kg' : '-';
+  var statLatestDateEl = document.getElementById('statLatestDate');
+  if(latest){
+    var lp = latest.date.split('-');
+    statLatestDateEl.textContent = lp[0] + '/' + parseInt(lp[1],10) + '/' + parseInt(lp[2],10) + '時点';
+  } else {
+    statLatestDateEl.textContent = '';
+  }
   var last7 = records.slice(-7);
   var avg7 = last7.length ? (last7.reduce(function(s,r){return s+r.weight;},0) / last7.length) : null;
   document.getElementById('stat7d').textContent = avg7 !== null ? avg7.toFixed(1) + 'kg' : '-';
