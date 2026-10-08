@@ -23,24 +23,27 @@
 <style>
   :root{
     --series-1:#2a78d6; --series-2:#eb6834; --series-3:#3fa66a; --series-4:#e0a92e;
-    --surface-1:#ffffff; --page-plane:#f4f6f8; --text-primary:#1c1c1c; --text-secondary:#6b6b6b;
+    --surface-1:#ffffff; --page-plane:#f5f6fb; --text-primary:#1c1c1c; --text-secondary:#6b6b6b;
     --border:rgba(11,11,11,0.10); --radius-card:16px;
   }
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--page-plane); color:var(--text-primary); font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; padding-bottom:40px; overflow-x:hidden;}
-  header.app-header{background:linear-gradient(135deg,#1f3a5f,#2a78d6); color:#fff; padding:22px 20px; border-radius:0 0 20px 20px; margin-bottom:16px;}
-  header.app-header h1{margin:0; font-size:20px;}
-  header.app-header p{margin:4px 0 0; font-size:13px; opacity:0.85;}
+  body{margin:0; background:var(--page-plane); color:var(--text-primary); font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; padding-bottom:96px; overflow-x:hidden;}
+  header.app-header{background:transparent; color:var(--text-primary); padding:calc(22px + env(safe-area-inset-top)) 20px 8px; margin-bottom:8px; max-width:720px; margin-left:auto; margin-right:auto;}
+  header.app-header h1{margin:0; font-size:22px; font-weight:800; letter-spacing:.01em;}
+  header.app-header p{margin:4px 0 0; font-size:13px; color:var(--text-secondary);}
   .wrap{max-width:720px; margin:0 auto; padding:0 16px;}
-  nav.tabs{display:flex; gap:8px; background:var(--surface-1); border-radius:999px; padding:4px; margin-bottom:16px; overflow-x:auto;}
-  nav.tabs button{flex:1; white-space:nowrap; border:none; background:transparent; padding:10px 14px; border-radius:999px; font-size:13px; font-weight:600; color:var(--text-secondary); cursor:pointer;}
-  nav.tabs button.active{background:var(--series-1); color:#fff;}
+  nav.tabbar{position:fixed; left:0; right:0; bottom:0; z-index:50; display:flex; background:rgba(255,255,255,0.94); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-top:1px solid var(--border); padding:6px 6px calc(6px + env(safe-area-inset-bottom));}
+  nav.tabbar button{flex:1; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0; border-radius:14px; color:var(--text-secondary); cursor:pointer; font-family:inherit;}
+  nav.tabbar .ti{display:block; line-height:0;}
+  nav.tabbar .ti .ic{display:block;}
+  nav.tabbar .tl{font-size:10px; font-weight:700;}
+  nav.tabbar button.active{color:var(--series-1);}
   section{display:none;}
   section.active{display:block;}
-  .card{background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-card); padding:18px; margin-bottom:16px;}
+  .card{background:var(--surface-1); border:1px solid rgba(20,30,70,0.05); border-radius:20px; padding:18px; margin-bottom:14px; box-shadow:0 2px 10px rgba(30,40,90,0.05);}
   .card h2{margin:0 0 12px; font-size:15px; font-weight:700;}
   .stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;}
-  .stat-tile{background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center;}
+  .stat-tile{background:var(--surface-1); border:1px solid rgba(20,30,70,0.05); box-shadow:0 2px 10px rgba(30,40,90,0.05); border-radius:18px; padding:14px 10px; text-align:center;}
   .stat-tile .label{font-size:11px; color:var(--text-secondary);}
   .stat-tile .value{font-size:20px; font-weight:700; margin-top:4px;}
   .period-filter{display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;}
@@ -62,7 +65,7 @@
   .motivation-banner{background:linear-gradient(90deg,#ffd76a,#ff9f43); color:#5a3c00; font-weight:700; font-size:13px; text-align:center; padding:10px; border-radius:12px; margin-bottom:14px;}
   .motivation-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
   .motivation-item{text-align:center;}
-  .motivation-icon{font-size:22px; line-height:1;}
+  .motivation-icon{line-height:0; display:flex; justify-content:center;}
   .motivation-value{font-size:17px; font-weight:800; margin-top:4px;}
   .motivation-label{font-size:10px; color:var(--text-secondary); margin-top:2px;}
   .motivation-date{font-size:10px; color:var(--text-secondary); margin-top:1px;}
@@ -119,7 +122,7 @@
 <div id="onboardingScreen" class="onboarding-screen">
   <div class="wrap" style="max-width:480px;">
     <div class="onboard-hero">
-      <h1>⚖️ ScaleNote</h1>
+      <h1>ScaleNote</h1>
       <p>はじめに、いくつか教えてください</p>
     </div>
     <div class="card">
@@ -190,16 +193,10 @@
 
 <div id="mainApp" style="display:none;">
 <header class="app-header">
-  <h1>⚖️ ScaleNote</h1>
+  <h1>ScaleNote</h1>
   <p>体重記録ダッシュボード</p>
 </header>
 <div class="wrap">
-  <nav class="tabs">
-    <button data-tab="dashboard" class="active">ダッシュボード</button>
-    <button data-tab="add">記録を追加</button>
-    <button data-tab="history">履歴</button>
-    <button data-tab="settings">連携設定</button>
-  </nav>
 
   <section id="dashboard" class="active">
     <div class="stat-row">
@@ -211,18 +208,18 @@
       <div class="motivation-banner" id="motivationBanner" style="display:none;"></div>
       <div class="motivation-row">
         <div class="motivation-item">
-          <div class="motivation-icon">🔥</div>
+          <div class="motivation-icon" style="color:#f08a24;"><svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 3c1 4 5 5.5 5 10a5 5 0 01-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2-.5-3 0-6 1-8z"/></svg></div>
           <div class="motivation-value" id="streakValue">0</div>
           <div class="motivation-label">日連続記録</div>
         </div>
         <div class="motivation-item">
-          <div class="motivation-icon">🏆</div>
+          <div class="motivation-icon" style="color:#e0a92e;"><svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H4v1a4 4 0 004 4M16 6h4v1a4 4 0 01-4 4M12 13v4M8 21h8M10 17h4"/></svg></div>
           <div class="motivation-value" id="bestWeightValue">-</div>
           <div class="motivation-date" id="bestWeightDate"></div>
           <div class="motivation-label">自己ベスト</div>
         </div>
         <div class="motivation-item">
-          <div class="motivation-icon">📉</div>
+          <div class="motivation-icon" style="color:#3fa66a;"><svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/></svg></div>
           <div class="motivation-value" id="totalChangeValue">-</div>
           <div class="motivation-label">スタートから</div>
         </div>
@@ -273,6 +270,9 @@
         </table>
       </div>
     </div>
+  </section>
+
+  <section id="goal">
     <div class="card">
       <h2>目標体重・期限</h2>
       <label>目標体重 (kg)</label>
@@ -290,8 +290,71 @@
 
     <div class="card">
       <h2>毎日のPFC目安</h2>
-      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">目標体重・期限と、下のプロフィールから概算します（Mifflin-St Jeor式・目安値）。</p>
-      <div class="row2">
+      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">目標体重・期限と、「設定」タブのプロフィールから概算します（Mifflin-St Jeor式・目安値）。</p>
+      <div id="pfcResult" style="display:none;">
+        <div class="pfc-cal"><div class="num" id="pfcCalories">-</div><div class="cap">1日の目標カロリー (kcal)</div></div>
+        <div class="pfc-grid">
+          <div class="pfc-tile p"><div class="g" id="pfcProtein">-</div><div class="l">タンパク質(g)</div></div>
+          <div class="pfc-tile f"><div class="g" id="pfcFat">-</div><div class="l">脂質(g)</div></div>
+          <div class="pfc-tile c"><div class="g" id="pfcCarb">-</div><div class="l">炭水化物(g)</div></div>
+        </div>
+        <div class="pfc-warn" id="pfcWarn" style="display:none;"></div>
+      </div>
+      <div class="status-msg" id="pfcStatus"></div>
+    </div>
+  </section>
+
+  <section id="add">
+    <div class="card">
+      <h2>記録を追加（手動入力）</h2>
+      <label>日付</label>
+      <input type="date" id="addDate">
+      <label>体重 (kg)</label>
+      <input type="number" step="0.1" id="addWeight" placeholder="例：68.5">
+      <label>体脂肪率 (%)（任意）</label>
+      <input type="number" step="0.1" id="addBodyFat" placeholder="例：22.0">
+      <button class="primary" id="addBtn">記録を追加</button>
+      <div class="status-msg" id="addStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>履歴</h2>
+      <div class="hist-list" id="histList"></div>
+    </div>
+  </section>
+
+  <section id="link">
+    <div class="card">
+      <h2>GitHub連携</h2>
+      <p style="font-size:13px; color:var(--text-secondary);">iPhoneショートカットで自動記録したデータをこのダッシュボードに表示するための設定です。データはGitHubリポジトリ内の1ファイル（data.json）に保存されます。</p>
+      <label>GitHubユーザー名</label>
+      <input type="text" id="ghOwnerInput" placeholder="例：horikosu">
+      <label>リポジトリ名</label>
+      <input type="text" id="ghRepoInput" placeholder="例：ScaleNote">
+      <label>ファイルパス</label>
+      <input type="text" id="ghPathInput" placeholder="data.json" value="data.json">
+      <label>Personal Access Token（Fine-grained・このリポジトリのContents権限のみ推奨）</label>
+      <input type="password" id="ghTokenInput" placeholder="github_pat_...">
+      <button class="primary" id="saveSettingsBtn">保存して同期</button>
+      <button class="secondary" id="refreshBtn">今すぐ再取得</button>
+      <div class="status-msg" id="settingsStatus"></div>
+    </div>
+    <div class="card">
+      <h2>この設定について</h2>
+      <p style="font-size:12px; color:var(--text-secondary); line-height:1.6;">
+      ・ここで入力した内容は、このブラウザにのみ保存されます（Claudeや他サーバーには送信されません）。<br>
+      ・体重データ自体は、GitHubリポジトリ内の指定したファイルに保存されます。<br>
+      ・トークンはこのリポジトリ専用に権限を絞って発行し、リポジトリはPrivateにしてください。<br>
+      ・別の端末でも見たい場合は、同じ内容をその端末でも入力してください。
+      </p>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="card">
+      <h2>プロフィール</h2>
+      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">毎日のPFC目安の計算に使います。保存すると「目標」タブに結果が表示されます。</p>
+<div class="row2">
         <div>
           <label>身長 (cm)</label>
           <input type="number" step="0.1" id="profileHeight" placeholder="例：170">
@@ -319,67 +382,21 @@
         </div>
       </div>
       <button class="primary" id="saveProfileBtn">プロフィールを保存してPFC計算</button>
-      <div id="pfcResult" style="display:none;">
-        <div class="pfc-cal"><div class="num" id="pfcCalories">-</div><div class="cap">1日の目標カロリー (kcal)</div></div>
-        <div class="pfc-grid">
-          <div class="pfc-tile p"><div class="g" id="pfcProtein">-</div><div class="l">タンパク質(g)</div></div>
-          <div class="pfc-tile f"><div class="g" id="pfcFat">-</div><div class="l">脂質(g)</div></div>
-          <div class="pfc-tile c"><div class="g" id="pfcCarb">-</div><div class="l">炭水化物(g)</div></div>
-        </div>
-        <div class="pfc-warn" id="pfcWarn" style="display:none;"></div>
-      </div>
-      <div class="status-msg" id="pfcStatus"></div>
-    </div>
-  </section>
-
-  <section id="add">
-    <div class="card">
-      <h2>記録を追加（手動入力）</h2>
-      <label>日付</label>
-      <input type="date" id="addDate">
-      <label>体重 (kg)</label>
-      <input type="number" step="0.1" id="addWeight" placeholder="例：68.5">
-      <label>体脂肪率 (%)（任意）</label>
-      <input type="number" step="0.1" id="addBodyFat" placeholder="例：22.0">
-      <button class="primary" id="addBtn">記録を追加</button>
-      <div class="status-msg" id="addStatus"></div>
-    </div>
-  </section>
-
-  <section id="history">
-    <div class="card">
-      <h2>履歴</h2>
-      <div class="hist-list" id="histList"></div>
-    </div>
-  </section>
-
-  <section id="settings">
-    <div class="card">
-      <h2>GitHub連携</h2>
-      <p style="font-size:13px; color:var(--text-secondary);">iPhoneショートカットで自動記録したデータをこのダッシュボードに表示するための設定です。データはGitHubリポジトリ内の1ファイル（data.json）に保存されます。</p>
-      <label>GitHubユーザー名</label>
-      <input type="text" id="ghOwnerInput" placeholder="例：horikosu">
-      <label>リポジトリ名</label>
-      <input type="text" id="ghRepoInput" placeholder="例：ScaleNote">
-      <label>ファイルパス</label>
-      <input type="text" id="ghPathInput" placeholder="data.json" value="data.json">
-      <label>Personal Access Token（Fine-grained・このリポジトリのContents権限のみ推奨）</label>
-      <input type="password" id="ghTokenInput" placeholder="github_pat_...">
-      <button class="primary" id="saveSettingsBtn">保存して同期</button>
-      <button class="secondary" id="refreshBtn">今すぐ再取得</button>
-      <div class="status-msg" id="settingsStatus"></div>
     </div>
     <div class="card">
-      <h2>この設定について</h2>
-      <p style="font-size:12px; color:var(--text-secondary); line-height:1.6;">
-      ・ここで入力した内容は、このブラウザにのみ保存されます（Claudeや他サーバーには送信されません）。<br>
-      ・体重データ自体は、GitHubリポジトリ内の指定したファイルに保存されます。<br>
-      ・トークンはこのリポジトリ専用に権限を絞って発行し、リポジトリはPrivateにしてください。<br>
-      ・別の端末でも見たい場合は、同じ内容をその端末でも入力してください。
-      </p>
+      <h2>データ管理</h2>
+      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">記録をCSVファイルとして書き出せます。</p>
+      <button class="secondary" id="exportCsvBtn">記録をCSVで書き出す</button>
     </div>
   </section>
 </div>
+<nav class="tabbar">
+  <button data-tab="dashboard" class="active"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span><span class="tl">統計</span></button>
+  <button data-tab="add"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span><span class="tl">記録</span></button>
+  <button data-tab="goal"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span><span class="tl">目標</span></button>
+  <button data-tab="link"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></span><span class="tl">連携</span></button>
+  <button data-tab="settings"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><span class="tl">設定</span></button>
+</nav>
 </div><!-- /mainApp -->
 
 <script>
@@ -408,12 +425,13 @@ function persistState(){
 }
 
 // タブ切り替え
-document.querySelectorAll('nav.tabs button').forEach(function(btn){
+document.querySelectorAll('nav.tabbar button').forEach(function(btn){
   btn.addEventListener('click', function(){
-    document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('nav.tabbar button').forEach(function(b){ b.classList.remove('active'); });
     document.querySelectorAll('section').forEach(function(s){ s.classList.remove('active'); });
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo(0,0);
   });
 });
 
@@ -769,10 +787,10 @@ function renderMotivation(records){
   var isNewBest = latest.date === best.date && records.length > 1;
   if(isNewBest){
     banner.style.display = 'block';
-    banner.textContent = '🎉 自己ベスト更新！ ' + latest.weight.toFixed(1) + 'kgは記録開始から最軽量です！';
+    banner.textContent = '自己ベスト更新！ ' + latest.weight.toFixed(1) + 'kgは記録開始から最軽量です！';
   } else if(streak >= 7 && streak % 7 === 0){
     banner.style.display = 'block';
-    banner.textContent = '🔥 ' + streak + '日連続記録達成！この調子で続けましょう！';
+    banner.textContent = '' + streak + '日連続記録達成！この調子で続けましょう！';
   } else {
     banner.style.display = 'none';
   }
@@ -998,7 +1016,7 @@ function renderAll(){
         goalNote.textContent = 'このペースなら、約' + daysToGoal + '日後に目標体重に到達する見込みです（直近14日の変化ペースをもとにした概算）。';
       } else if(diff <= 0){
         goalNote.style.display = 'block';
-        goalNote.textContent = '目標体重を達成しています🎉';
+        goalNote.textContent = '目標体重を達成しています';
       } else {
         goalNote.style.display = 'block';
         goalNote.textContent = '直近のペースでは目標到達の見込みが立ちません。記録を増やすと精度が上がります。';
@@ -1076,22 +1094,14 @@ function renderAll(){
         pointRadius: ptRadius,
         pointHoverRadius: 5,
         pointHitRadius: 12
-      }].concat(state.goalWeight ? [{
-        label: '目標',
-        data: weights.map(function(){ return state.goalWeight; }),
-        borderColor: '#eb6834',
-        borderDash: [6,4],
-        pointRadius: 0,
-        pointHoverRadius: 0
-      }] : [])
+      }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: true, labels: { font: { size: 11 } } },
+        legend: { display: false },
         tooltip: {
-          filter: function(item){ return item.dataset.label !== '目標'; },
           callbacks: {
             title: function(items){ return items.length ? fullDates[items[0].dataIndex] : ''; },
             label: function(ctx){
@@ -1169,6 +1179,20 @@ document.querySelectorAll('#trendChartType button').forEach(function(btn){
 showOnboardingIfNeeded();
 renderAll();
 if(ghConfigured()){ fetchFromGithub(false); }
+
+// プロフィール保存後は「目標」タブで結果を表示
+document.getElementById('saveProfileBtn').addEventListener('click', function(){
+  var t = document.querySelector('nav.tabbar button[data-tab="goal"]');
+  if(t) t.click();
+});
+// CSV書き出し
+document.getElementById('exportCsvBtn').addEventListener('click', function(){
+  var rows = ['date,weight,bodyFat'].concat((state.records||[]).map(function(r){ return r.date + ',' + r.weight + ',' + (r.bodyFat==null?'':r.bodyFat); }));
+  var blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'scalenote_records.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
 </script>
 </body>
 </html>
