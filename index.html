@@ -27,13 +27,14 @@
     --border:rgba(11,11,11,0.10); --radius-card:16px;
   }
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--page-plane); color:var(--text-primary); font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; padding-bottom:96px; overflow-x:hidden;}
+  body{margin:0; background:var(--page-plane); color:var(--text-primary); font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; padding-bottom:120px; overflow-x:hidden;}
   header.app-header{background:transparent; color:var(--text-primary); padding:calc(22px + env(safe-area-inset-top)) 20px 8px; margin-bottom:8px; max-width:720px; margin-left:auto; margin-right:auto;}
   header.app-header h1{margin:0; font-size:22px; font-weight:800; letter-spacing:.01em;}
   header.app-header p{margin:4px 0 0; font-size:13px; color:var(--text-secondary);}
   .wrap{max-width:720px; margin:0 auto; padding:0 16px;}
-  nav.tabbar{position:fixed; left:0; right:0; bottom:0; z-index:50; display:flex; background:rgba(255,255,255,0.94); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-top:1px solid var(--border); padding:6px 6px calc(6px + env(safe-area-inset-bottom));}
-  nav.tabbar button{flex:1; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0; border-radius:14px; color:var(--text-secondary); cursor:pointer; font-family:inherit;}
+  nav.tabbar{position:fixed; left:14px; right:14px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:50; display:flex; gap:4px; max-width:520px; margin:0 auto; background:rgba(255,255,255,0.96); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(20,30,70,0.06); border-radius:26px; padding:8px; box-shadow:0 6px 24px rgba(30,40,90,0.14);}
+  nav.tabbar button{flex:1; min-height:52px; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 0; border-radius:18px; color:var(--text-secondary); cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent;}
+  nav.tabbar button.active{background:rgba(42,120,214,0.10);}
   nav.tabbar .ti{display:block; line-height:0;}
   nav.tabbar .ti .ic{display:block;}
   nav.tabbar .tl{font-size:10px; font-weight:700;}
@@ -45,6 +46,7 @@
   .stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;}
   .stat-tile{background:var(--surface-1); border:1px solid rgba(20,30,70,0.05); box-shadow:0 2px 10px rgba(30,40,90,0.05); border-radius:18px; padding:14px 10px; text-align:center;}
   .stat-tile .label{font-size:11px; color:var(--text-secondary);}
+  .stat-tile .stat-sub{font-size:10px; color:var(--text-secondary); margin-top:2px; min-height:12px;}
   .stat-tile .value{font-size:20px; font-weight:700; margin-top:4px;}
   .period-filter{display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;}
   .period-filter button{border:1px solid var(--border); background:#fff; color:var(--text-secondary); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;}
@@ -108,6 +110,34 @@
   .pfc-tile .g{font-size:16px; font-weight:700;}
   .pfc-tile .l{font-size:10px; opacity:.9;}
   .pfc-warn{font-size:12px; margin-top:10px; padding:8px 10px; background:#fff4e5; color:#8a5a00; border-radius:8px;}
+  .meal-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  input.meal-date{width:auto; min-width:0; padding:6px 8px; font-size:14px;}
+  .meal-kcal{font-size:30px; font-weight:800; margin:4px 0 6px;}
+  .meal-kcal-t{font-size:13px; font-weight:600; color:var(--text-secondary);}
+  .meal-bar{background:#eceff6; border-radius:999px; height:10px; overflow:hidden;}
+  .meal-bar > div{height:100%; border-radius:999px; background:var(--series-1); transition:width .3s;}
+  .meal-bar.sm{height:7px;}
+  .meal-bar.p > div{background:#3fa66a;} .meal-bar.f > div{background:#e0a92e;} .meal-bar.c > div{background:#2a78d6;}
+  .meal-bar > div.over{background:#e5534b;}
+  .meal-pfc{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;}
+  .meal-pfc-l{font-size:11px; color:var(--text-secondary);}
+  .meal-pfc-v{font-size:15px; font-weight:700; margin:2px 0 5px;}
+  .jan-row{display:flex; gap:8px; margin-top:10px;}
+  .jan-row input{flex:1; min-width:0;}
+  .jan-row button{flex-shrink:0; border:none; background:var(--series-1); color:#fff; font-weight:700; padding:0 18px; border-radius:12px; font-size:14px; cursor:pointer;}
+  #productForm{margin-top:12px; padding-top:6px; border-top:1px solid var(--border);}
+  .pf-preview{margin-top:12px; padding:10px 12px; background:#eef5ff; border-radius:10px; font-size:13px; line-height:1.6;}
+  .meal-row{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--border); border-radius:12px;}
+  .meal-row .n{font-size:14px; font-weight:700;}
+  .meal-row .s{font-size:11px; color:var(--text-secondary); margin-top:2px;}
+  .meal-row .del{border:none; background:none; color:#c0392b; font-size:12px; cursor:pointer; flex-shrink:0;}
+  .chip-wrap{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{border:1px solid var(--border); background:#fff; border-radius:999px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; max-width:100%; font-family:inherit; color:var(--text-primary);}
+  .scan-overlay{position:fixed; inset:0; z-index:100; background:#000; display:flex; align-items:center; justify-content:center;}
+  .scan-overlay video{width:100%; height:100%; object-fit:cover;}
+  .scan-frame{position:absolute; width:78%; max-width:340px; height:150px; border:3px solid rgba(255,255,255,.9); border-radius:18px; box-shadow:0 0 0 9999px rgba(0,0,0,.45);}
+  .scan-hint{position:absolute; left:0; right:0; bottom:calc(120px + env(safe-area-inset-bottom)); text-align:center; color:#fff; font-size:14px; font-weight:600;}
+  .scan-close{position:absolute; left:50%; transform:translateX(-50%); bottom:calc(40px + env(safe-area-inset-bottom)); border:none; background:#fff; color:#111; font-weight:700; padding:12px 36px; border-radius:999px; font-size:15px;}
   .onboarding-screen{min-height:100vh; padding:24px 0;}
   .onboard-hero{text-align:center; margin-bottom:20px;}
   .onboard-hero h1{margin:0 0 6px; font-size:24px;}
@@ -200,7 +230,7 @@
 
   <section id="dashboard" class="active">
     <div class="stat-row">
-      <div class="stat-tile"><div class="label">最新体重</div><div class="value" id="statLatest">-</div></div>
+      <div class="stat-tile"><div class="label">最新体重</div><div class="value" id="statLatest">-</div><div class="stat-sub" id="statLatestDate"></div></div>
       <div class="stat-tile"><div class="label">7日平均</div><div class="value" id="stat7d">-</div></div>
       <div class="stat-tile"><div class="label">目標まで</div><div class="value" id="statGoal">-</div></div>
     </div>
@@ -272,6 +302,67 @@
     </div>
   </section>
 
+  <section id="meal">
+    <div class="card">
+      <div class="meal-head">
+        <h2 style="margin:0;">摂取カロリー・PFC</h2>
+        <input type="date" id="mealDate" class="meal-date">
+      </div>
+      <div class="meal-kcal"><span id="mealKcal">0</span><span class="meal-kcal-t" id="mealKcalTarget"> kcal</span></div>
+      <div class="meal-bar"><div id="mealKcalBar" style="width:0%;"></div></div>
+      <div class="meal-pfc">
+        <div class="meal-pfc-item"><div class="meal-pfc-l">タンパク質</div><div class="meal-pfc-v" id="mealP">0g</div><div class="meal-bar sm p"><div id="mealPBar" style="width:0%;"></div></div></div>
+        <div class="meal-pfc-item"><div class="meal-pfc-l">脂質</div><div class="meal-pfc-v" id="mealF">0g</div><div class="meal-bar sm f"><div id="mealFBar" style="width:0%;"></div></div></div>
+        <div class="meal-pfc-item"><div class="meal-pfc-l">炭水化物</div><div class="meal-pfc-v" id="mealC">0g</div><div class="meal-bar sm c"><div id="mealCBar" style="width:0%;"></div></div></div>
+      </div>
+      <div class="status-msg" id="mealTargetNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>商品を追加</h2>
+      <button class="primary" id="scanBtn" style="margin-top:0;">バーコードを読み取る</button>
+      <div class="jan-row">
+        <input type="text" inputmode="numeric" id="janInput" placeholder="バーコード番号（13桁）">
+        <button id="janSearchBtn">検索</button>
+      </div>
+      <button class="secondary" id="manualBtn">栄養成分を手入力で追加</button>
+      <div class="status-msg" id="productStatus"></div>
+      <div id="productForm" style="display:none;">
+        <label>商品名</label>
+        <input type="text" id="pfName" placeholder="例：サラダチキン">
+        <label>入力する栄養成分の基準</label>
+        <select id="pfBasis">
+          <option value="serving">1個（1食分）あたり</option>
+          <option value="100g">100gあたり</option>
+        </select>
+        <div class="row2">
+          <div><label>タンパク質(g)</label><input type="number" step="0.1" id="pfP"></div>
+          <div><label>脂質(g)</label><input type="number" step="0.1" id="pfF"></div>
+        </div>
+        <div class="row2">
+          <div><label>炭水化物(g)</label><input type="number" step="0.1" id="pfC"></div>
+          <div><label>カロリー(kcal)</label><input type="number" step="1" id="pfK" placeholder="空欄なら自動計算"></div>
+        </div>
+        <label id="pfAmountLabel">食べた個数</label>
+        <input type="number" step="0.1" id="pfAmount" value="1">
+        <div class="pf-preview" id="pfPreview"></div>
+        <button class="primary" id="pfAddBtn">この内容で食事に追加</button>
+        <button class="secondary" id="pfCancelBtn">キャンセル</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>食べたもの</h2>
+      <div class="hist-list" id="mealList"></div>
+    </div>
+
+    <div class="card">
+      <h2>よく使う商品</h2>
+      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 8px;">タップすると今日の食事に追加します（直前の量で登録）。</p>
+      <div class="chip-wrap" id="productChips"></div>
+    </div>
+  </section>
+
   <section id="goal">
     <div class="card">
       <h2>目標体重・期限</h2>
@@ -323,32 +414,6 @@
     </div>
   </section>
 
-  <section id="link">
-    <div class="card">
-      <h2>GitHub連携</h2>
-      <p style="font-size:13px; color:var(--text-secondary);">iPhoneショートカットで自動記録したデータをこのダッシュボードに表示するための設定です。データはGitHubリポジトリ内の1ファイル（data.json）に保存されます。</p>
-      <label>GitHubユーザー名</label>
-      <input type="text" id="ghOwnerInput" placeholder="例：horikosu">
-      <label>リポジトリ名</label>
-      <input type="text" id="ghRepoInput" placeholder="例：ScaleNote">
-      <label>ファイルパス</label>
-      <input type="text" id="ghPathInput" placeholder="data.json" value="data.json">
-      <label>Personal Access Token（Fine-grained・このリポジトリのContents権限のみ推奨）</label>
-      <input type="password" id="ghTokenInput" placeholder="github_pat_...">
-      <button class="primary" id="saveSettingsBtn">保存して同期</button>
-      <button class="secondary" id="refreshBtn">今すぐ再取得</button>
-      <div class="status-msg" id="settingsStatus"></div>
-    </div>
-    <div class="card">
-      <h2>この設定について</h2>
-      <p style="font-size:12px; color:var(--text-secondary); line-height:1.6;">
-      ・ここで入力した内容は、このブラウザにのみ保存されます（Claudeや他サーバーには送信されません）。<br>
-      ・体重データ自体は、GitHubリポジトリ内の指定したファイルに保存されます。<br>
-      ・トークンはこのリポジトリ専用に権限を絞って発行し、リポジトリはPrivateにしてください。<br>
-      ・別の端末でも見たい場合は、同じ内容をその端末でも入力してください。
-      </p>
-    </div>
-  </section>
 
   <section id="settings">
     <div class="card">
@@ -388,13 +453,43 @@
       <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">記録をCSVファイルとして書き出せます。</p>
       <button class="secondary" id="exportCsvBtn">記録をCSVで書き出す</button>
     </div>
+    <div class="card">
+      <h2>GitHub連携</h2>
+      <p style="font-size:13px; color:var(--text-secondary);">iPhoneショートカットで自動記録したデータをこのダッシュボードに表示するための設定です。データはGitHubリポジトリ内の1ファイル（data.json）に保存されます。</p>
+      <label>GitHubユーザー名</label>
+      <input type="text" id="ghOwnerInput" placeholder="例：horikosu">
+      <label>リポジトリ名</label>
+      <input type="text" id="ghRepoInput" placeholder="例：ScaleNote">
+      <label>ファイルパス</label>
+      <input type="text" id="ghPathInput" placeholder="data.json" value="data.json">
+      <label>Personal Access Token（Fine-grained・このリポジトリのContents権限のみ推奨）</label>
+      <input type="password" id="ghTokenInput" placeholder="github_pat_...">
+      <button class="primary" id="saveSettingsBtn">保存して同期</button>
+      <button class="secondary" id="refreshBtn">今すぐ再取得</button>
+      <div class="status-msg" id="settingsStatus"></div>
+    </div>
+    <div class="card">
+      <h2>この設定について</h2>
+      <p style="font-size:12px; color:var(--text-secondary); line-height:1.6;">
+      ・ここで入力した内容は、このブラウザにのみ保存されます（Claudeや他サーバーには送信されません）。<br>
+      ・体重データ自体は、GitHubリポジトリ内の指定したファイルに保存されます。<br>
+      ・トークンはこのリポジトリ専用に権限を絞って発行し、リポジトリはPrivateにしてください。<br>
+      ・別の端末でも見たい場合は、同じ内容をその端末でも入力してください。
+      </p>
+    </div>
   </section>
+</div>
+<div id="scanOverlay" class="scan-overlay" style="display:none;">
+  <video id="scanVideo" playsinline muted></video>
+  <div class="scan-frame"></div>
+  <div class="scan-hint" id="scanHint">バーコードを枠に合わせてください</div>
+  <button id="scanClose" class="scan-close">閉じる</button>
 </div>
 <nav class="tabbar">
   <button data-tab="dashboard" class="active"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span><span class="tl">統計</span></button>
   <button data-tab="add"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span><span class="tl">記録</span></button>
+  <button data-tab="meal"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4 3v5a3 3 0 006 0V3M7 11v10"/><path d="M17 21V3c-2.5 1.5-4 4.5-4 8h4"/></svg></span><span class="tl">食事</span></button>
   <button data-tab="goal"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span><span class="tl">目標</span></button>
-  <button data-tab="link"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></span><span class="tl">連携</span></button>
   <button data-tab="settings"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><span class="tl">設定</span></button>
 </nav>
 </div><!-- /mainApp -->
@@ -995,6 +1090,7 @@ function renderAll(){
   // 統計
   var latest = records.length ? records[records.length-1] : null;
   document.getElementById('statLatest').textContent = latest ? latest.weight.toFixed(1) + 'kg' : '-';
+  (function(){ var el = document.getElementById('statLatestDate'); if(!el) return; if(latest){ var lp = latest.date.split('-'); el.textContent = lp[0] + '/' + parseInt(lp[1],10) + '/' + parseInt(lp[2],10) + '時点'; } else { el.textContent = ''; } })();
   var last7 = records.slice(-7);
   var avg7 = last7.length ? (last7.reduce(function(s,r){return s+r.weight;},0) / last7.length) : null;
   document.getElementById('stat7d').textContent = avg7 !== null ? avg7.toFixed(1) + 'kg' : '-';
@@ -1193,6 +1289,243 @@ document.getElementById('exportCsvBtn').addEventListener('click', function(){
   a.href = URL.createObjectURL(blob); a.download = 'scalenote_records.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
+
+// ===== 食事記録（バーコード読み取り・PFC登録） =====
+if(!state.meals) state.meals = [];
+if(!state.products) state.products = {};
+function escHtml(t){ return String(t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function localDateStr(d){ d = d || new Date(); return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2); }
+function r1(v){ return Math.round(v*10)/10; }
+function mealTargets(){
+  var recs = (state.records || []).slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  var latest = recs.length ? recs[recs.length-1] : null;
+  var p = state.profile || {};
+  if(!latest || !state.goalWeight || !state.goalDeadline || !p.height || !p.age) return null;
+  return computePfc(latest.weight, state.goalWeight, state.goalDeadline, p);
+}
+var mealDateEl = document.getElementById('mealDate');
+mealDateEl.value = localDateStr();
+mealDateEl.addEventListener('change', function(){ renderMeals(); });
+var pendingProduct = null; // {code, name, basis, p,f,c,k}
+
+function barSet(id, val, target){
+  var el = document.getElementById(id);
+  if(!target){ el.style.width = '0%'; el.className = ''; return; }
+  var pct = Math.min(100, val / target * 100);
+  el.style.width = pct + '%';
+  el.className = val > target ? 'over' : '';
+}
+function renderMeals(){
+  var date = mealDateEl.value || localDateStr();
+  var items = state.meals.filter(function(m){ return m.date === date; });
+  var tot = items.reduce(function(a,m){ a.k+=m.kcal; a.p+=m.p; a.f+=m.f; a.c+=m.c; return a; }, {k:0,p:0,f:0,c:0});
+  var t = mealTargets();
+  document.getElementById('mealKcal').textContent = Math.round(tot.k).toLocaleString();
+  document.getElementById('mealKcalTarget').textContent = t ? ' / ' + t.calories.toLocaleString() + ' kcal' : ' kcal';
+  document.getElementById('mealP').textContent = r1(tot.p) + 'g' + (t ? ' / ' + t.proteinG + 'g' : '');
+  document.getElementById('mealF').textContent = r1(tot.f) + 'g' + (t ? ' / ' + t.fatG + 'g' : '');
+  document.getElementById('mealC').textContent = r1(tot.c) + 'g' + (t ? ' / ' + t.carbG + 'g' : '');
+  barSet('mealKcalBar', tot.k, t && t.calories);
+  barSet('mealPBar', tot.p, t && t.proteinG);
+  barSet('mealFBar', tot.f, t && t.fatG);
+  barSet('mealCBar', tot.c, t && t.carbG);
+  document.getElementById('mealTargetNote').textContent = t ? '' : '目標体重・期限とプロフィールを保存すると、目標との比較が表示されます。';
+
+  var list = document.getElementById('mealList');
+  if(!items.length){ list.innerHTML = '<div class="empty-note">この日の食事はまだありません。</div>'; }
+  else {
+    list.innerHTML = items.map(function(m){
+      return '<div class="meal-row"><div><div class="n">' + escHtml(m.name) + '</div><div class="s">' + Math.round(m.kcal) + 'kcal ／ P ' + r1(m.p) + 'g ／ F ' + r1(m.f) + 'g ／ C ' + r1(m.c) + 'g</div></div><button class="del" data-id="' + m.id + '">削除</button></div>';
+    }).join('');
+    list.querySelectorAll('.del').forEach(function(b){
+      b.addEventListener('click', function(){
+        state.meals = state.meals.filter(function(m){ return String(m.id) !== b.dataset.id; });
+        persistState(); renderMeals();
+      });
+    });
+  }
+  var chips = document.getElementById('productChips');
+  var prods = Object.keys(state.products).map(function(k){ return state.products[k]; }).sort(function(a,b){ return (b.used||0) - (a.used||0); }).slice(0, 30);
+  if(!prods.length){ chips.innerHTML = '<div class="empty-note" style="width:100%;">登録した商品がここに並びます。</div>'; }
+  else {
+    chips.innerHTML = prods.map(function(p){ return '<button class="chip" data-key="' + escHtml(p.key) + '">' + escHtml(p.name) + '</button>'; }).join('');
+    chips.querySelectorAll('.chip').forEach(function(b){
+      b.addEventListener('click', function(){
+        var p = state.products[b.dataset.key]; if(!p) return;
+        addMealFromProduct(p, p.lastAmount || (p.basis === '100g' ? 100 : 1));
+        document.getElementById('productStatus').textContent = '「' + p.name + '」を追加しました';
+        document.getElementById('productStatus').className = 'status-msg ok';
+      });
+    });
+  }
+}
+function calcFromProduct(p, amount){
+  var mul = p.basis === '100g' ? amount / 100 : amount;
+  var kcal = (p.k !== null && p.k !== undefined && !isNaN(p.k)) ? p.k : (p.p*4 + p.f*9 + p.c*4);
+  return { p: p.p*mul, f: p.f*mul, c: p.c*mul, kcal: kcal*mul };
+}
+function addMealFromProduct(p, amount){
+  var v = calcFromProduct(p, amount);
+  state.meals.push({ id: Date.now() + Math.floor(Math.random()*1000), date: mealDateEl.value || localDateStr(), name: p.name, p: v.p, f: v.f, c: v.c, kcal: v.kcal });
+  p.used = (p.used || 0) + 1; p.lastAmount = amount;
+  persistState(); renderMeals();
+}
+
+// 商品フォーム
+function showProductForm(prod){
+  pendingProduct = prod;
+  document.getElementById('productForm').style.display = 'block';
+  document.getElementById('pfName').value = prod.name || '';
+  document.getElementById('pfBasis').value = prod.basis || 'serving';
+  document.getElementById('pfP').value = prod.p != null ? prod.p : '';
+  document.getElementById('pfF').value = prod.f != null ? prod.f : '';
+  document.getElementById('pfC').value = prod.c != null ? prod.c : '';
+  document.getElementById('pfK').value = prod.k != null ? prod.k : '';
+  document.getElementById('pfAmount').value = prod.amount != null ? prod.amount : (prod.basis === '100g' ? 100 : 1);
+  updatePfLabels(); updatePfPreview();
+}
+function readPf(){
+  var num = function(id){ var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; };
+  return { name: document.getElementById('pfName').value.trim(), basis: document.getElementById('pfBasis').value,
+    p: num('pfP') || 0, f: num('pfF') || 0, c: num('pfC') || 0, k: num('pfK'), amount: num('pfAmount') };
+}
+function updatePfLabels(){
+  var basis = document.getElementById('pfBasis').value;
+  document.getElementById('pfAmountLabel').textContent = basis === '100g' ? '食べた量 (g)' : '食べた個数（1食分＝1）';
+}
+function updatePfPreview(){
+  var d = readPf();
+  var el = document.getElementById('pfPreview');
+  if(!d.amount){ el.textContent = '量を入力してください'; return; }
+  var v = calcFromProduct(d, d.amount);
+  el.textContent = '今回の摂取：' + Math.round(v.kcal) + 'kcal ／ P ' + r1(v.p) + 'g ／ F ' + r1(v.f) + 'g ／ C ' + r1(v.c) + 'g';
+}
+['pfBasis','pfP','pfF','pfC','pfK','pfAmount'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', function(){ if(id === 'pfBasis'){ updatePfLabels(); } updatePfPreview(); });
+  document.getElementById(id).addEventListener('change', function(){ if(id === 'pfBasis'){ updatePfLabels(); } updatePfPreview(); });
+});
+document.getElementById('pfCancelBtn').addEventListener('click', function(){
+  document.getElementById('productForm').style.display = 'none'; pendingProduct = null;
+});
+document.getElementById('pfAddBtn').addEventListener('click', function(){
+  var d = readPf();
+  var st = document.getElementById('productStatus');
+  if(!d.name){ st.textContent = '商品名を入力してください'; st.className = 'status-msg err'; return; }
+  if(!d.amount || d.amount <= 0){ st.textContent = '量を入力してください'; st.className = 'status-msg err'; return; }
+  var code = pendingProduct && pendingProduct.code ? pendingProduct.code : '';
+  var key = code || ('m:' + d.name);
+  var prod = state.products[key] || { key: key, used: 0 };
+  prod.name = d.name; prod.basis = d.basis; prod.p = d.p; prod.f = d.f; prod.c = d.c; prod.k = d.k; prod.code = code;
+  state.products[key] = prod;
+  addMealFromProduct(prod, d.amount);
+  document.getElementById('productForm').style.display = 'none'; pendingProduct = null;
+  document.getElementById('janInput').value = '';
+  st.textContent = '「' + d.name + '」を食事に追加しました'; st.className = 'status-msg ok';
+});
+document.getElementById('manualBtn').addEventListener('click', function(){
+  document.getElementById('productStatus').textContent = '';
+  showProductForm({ name: '', basis: 'serving', amount: 1 });
+});
+
+// バーコード番号から商品を検索（保存済み → Open Food Facts）
+function lookupBarcode(code){
+  var st = document.getElementById('productStatus');
+  code = String(code || '').replace(/\D/g, '');
+  if(code.length < 8){ st.textContent = 'バーコード番号は8〜13桁の数字です'; st.className = 'status-msg err'; return; }
+  if(state.products[code]){
+    var sp = state.products[code];
+    st.textContent = '保存済みの商品が見つかりました'; st.className = 'status-msg ok';
+    showProductForm({ code: code, name: sp.name, basis: sp.basis, p: sp.p, f: sp.f, c: sp.c, k: sp.k, amount: sp.lastAmount });
+    return;
+  }
+  st.textContent = '商品を検索中…'; st.className = 'status-msg';
+  fetch('https://world.openfoodfacts.org/api/v2/product/' + code + '.json?fields=product_name,product_name_ja,brands,nutriments,serving_quantity')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var pr = j && j.status === 1 ? j.product : null;
+      var n = pr && pr.nutriments ? pr.nutriments : null;
+      if(!pr){
+        st.textContent = 'この商品はデータベースに見つかりませんでした。パッケージの栄養成分を入力してください（次回から保存されます）。'; st.className = 'status-msg err';
+        showProductForm({ code: code, name: '', basis: 'serving', amount: 1 }); return;
+      }
+      var name = (pr.product_name_ja || pr.product_name || '').trim();
+      if(pr.brands && name.indexOf(pr.brands.split(',')[0]) < 0) name = (name ? name : '') + (name ? '（' + pr.brands.split(',')[0] + '）' : pr.brands.split(',')[0]);
+      var hasN = n && (n.proteins_100g != null || n.fat_100g != null || n.carbohydrates_100g != null);
+      if(!hasN){
+        st.textContent = '商品は見つかりましたが栄養情報がありません。パッケージの値を入力してください。'; st.className = 'status-msg err';
+        showProductForm({ code: code, name: name, basis: 'serving', amount: 1 }); return;
+      }
+      var k = n['energy-kcal_100g'];
+      st.textContent = 'データベースの値は100gあたりです。食べた量(g)を確認してください（パッケージと違う場合は修正OK）。'; st.className = 'status-msg ok';
+      var sq = parseFloat(pr.serving_quantity);
+      showProductForm({ code: code, name: name, basis: '100g', p: r1(n.proteins_100g || 0), f: r1(n.fat_100g || 0), c: r1(n.carbohydrates_100g || 0), k: k != null ? Math.round(k) : null, amount: (sq > 0 ? sq : 100) });
+    })
+    .catch(function(){
+      st.textContent = '検索に失敗しました。通信状況を確認するか、手入力で追加してください。'; st.className = 'status-msg err';
+    });
+}
+document.getElementById('janSearchBtn').addEventListener('click', function(){ lookupBarcode(document.getElementById('janInput').value); });
+document.getElementById('janInput').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ lookupBarcode(this.value); } });
+
+// バーコードスキャナ（BarcodeDetector → なければZXing）
+var scanStream = null, scanTimer = null, zxingReader = null, scanning = false;
+function stopScan(){
+  scanning = false;
+  if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
+  if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader = null; }
+  if(scanStream){ scanStream.getTracks().forEach(function(t){ t.stop(); }); scanStream = null; }
+  var v = document.getElementById('scanVideo'); v.srcObject = null;
+  document.getElementById('scanOverlay').style.display = 'none';
+}
+function onScanned(code){
+  if(!scanning) return;
+  stopScan();
+  document.getElementById('janInput').value = code;
+  lookupBarcode(code);
+}
+function loadZxing(cb){
+  if(window.ZXing){ cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+  s.onload = cb;
+  s.onerror = function(){ stopScan(); var st = document.getElementById('productStatus'); st.textContent = 'スキャナの読み込みに失敗しました。番号を手入力してください。'; st.className = 'status-msg err'; };
+  document.head.appendChild(s);
+}
+document.getElementById('scanBtn').addEventListener('click', function(){
+  var st = document.getElementById('productStatus');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    st.textContent = 'このブラウザではカメラを使えません。バーコード番号を手入力してください。'; st.className = 'status-msg err'; return;
+  }
+  var overlay = document.getElementById('scanOverlay'), video = document.getElementById('scanVideo');
+  overlay.style.display = 'flex'; scanning = true;
+  document.getElementById('scanHint').textContent = 'バーコードを枠に合わせてください';
+  if('BarcodeDetector' in window){
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).then(function(stream){
+      scanStream = stream; video.srcObject = stream; return video.play();
+    }).then(function(){
+      var det = new BarcodeDetector({ formats: ['ean_13','ean_8','upc_a','upc_e'] });
+      scanTimer = setInterval(function(){
+        det.detect(video).then(function(r){ if(r && r.length) onScanned(r[0].rawValue); }).catch(function(){});
+      }, 300);
+    }).catch(function(){ stopScan(); st.textContent = 'カメラを起動できませんでした。カメラの許可を確認してください。'; st.className = 'status-msg err'; });
+  } else {
+    loadZxing(function(){
+      if(!scanning) return;
+      try{
+        zxingReader = new ZXing.BrowserMultiFormatReader();
+        zxingReader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } }, audio: false }, video, function(result){
+          if(result) onScanned(result.getText());
+        }).catch(function(){ stopScan(); st.textContent = 'カメラを起動できませんでした。カメラの許可を確認してください。'; st.className = 'status-msg err'; });
+      }catch(e){ stopScan(); st.textContent = 'スキャナを起動できませんでした。番号を手入力してください。'; st.className = 'status-msg err'; }
+    });
+  }
+});
+document.getElementById('scanClose').addEventListener('click', stopScan);
+
+// renderAllの最後に食事表示も更新
+var _renderAllOrig = renderAll;
+renderAll = function(){ _renderAllOrig(); renderMeals(); };
+renderMeals();
 </script>
 </body>
 </html>
