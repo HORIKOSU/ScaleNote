@@ -138,6 +138,15 @@
   .scan-frame{position:absolute; width:78%; max-width:340px; height:150px; border:3px solid rgba(255,255,255,.9); border-radius:18px; box-shadow:0 0 0 9999px rgba(0,0,0,.45);}
   .scan-hint{position:absolute; left:0; right:0; bottom:calc(120px + env(safe-area-inset-bottom)); text-align:center; color:#fff; font-size:14px; font-weight:600;}
   .scan-close{position:absolute; left:50%; transform:translateX(-50%); bottom:calc(40px + env(safe-area-inset-bottom)); border:none; background:#fff; color:#111; font-weight:700; padding:12px 36px; border-radius:999px; font-size:15px;}
+  .run-summary{margin-top:12px; padding:10px 12px; background:#eef5ff; border-radius:10px; font-size:13px; line-height:1.7;}
+  .run-tips{margin:12px 0 0; padding-left:18px; font-size:12px; color:var(--text-secondary); line-height:1.8;}
+  .bal-main{font-size:34px; font-weight:800; margin:6px 0 2px;}
+  .bal-unit{font-size:13px; font-weight:600; color:var(--text-secondary);}
+  .bal-main.ok{color:var(--series-3);} .bal-main.warn{color:#e5534b;} .bal-main.mid{color:#e0a92e;}
+  .bal-sub{font-size:12px; color:var(--text-secondary); margin-bottom:12px;}
+  .bal-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; text-align:center; background:var(--page-plane); border-radius:14px; padding:10px 4px;}
+  .bal-l{font-size:10px; color:var(--text-secondary);}
+  .bal-v{font-size:14px; font-weight:700; margin-top:2px;}
   .onboarding-screen{min-height:100vh; padding:24px 0;}
   .onboard-hero{text-align:center; margin-bottom:20px;}
   .onboard-hero h1{margin:0 0 6px; font-size:24px;}
@@ -303,6 +312,18 @@
   </section>
 
   <section id="meal">
+    <div class="card" id="balanceCard">
+      <h2>今日のカロリー収支</h2>
+      <div class="bal-main"><span id="balValue">-</span><span class="bal-unit"> kcal</span></div>
+      <div class="bal-sub" id="balSub"></div>
+      <div class="bal-grid">
+        <div><div class="bal-l">摂取</div><div class="bal-v" id="balIn">-</div></div>
+        <div><div class="bal-l">基礎代謝</div><div class="bal-v" id="balBmr">-</div></div>
+        <div><div class="bal-l">日常活動</div><div class="bal-v" id="balDaily">-</div></div>
+        <div><div class="bal-l">運動</div><div class="bal-v" id="balEx">-</div></div>
+      </div>
+      <div class="status-msg" id="balNote"></div>
+    </div>
     <div class="card">
       <div class="meal-head">
         <h2 style="margin:0;">摂取カロリー・PFC</h2>
@@ -357,6 +378,20 @@
     </div>
 
     <div class="card">
+      <h2>運動を記録</h2>
+      <div class="row2">
+        <div><label>種類</label><select id="exType"><option value="run">ラン</option><option value="walk">ウォーキング</option></select></div>
+        <div><label>時間(分)</label><input type="number" step="1" id="exMin" placeholder="例：30"></div>
+      </div>
+      <label>距離(km)（分かれば入力）</label>
+      <input type="number" step="0.1" id="exKm" placeholder="例：4.5">
+      <div class="pf-preview" id="exPreview">時間か距離を入力すると、消費カロリーを計算します</div>
+      <button class="primary" id="exAddBtn">運動を追加</button>
+      <div class="status-msg" id="exStatus"></div>
+      <div class="hist-list" id="exList" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
       <h2>よく使う商品</h2>
       <p style="font-size:12px; color:var(--text-secondary); margin:0 0 8px;">タップすると今日の食事に追加します（直前の量で登録）。</p>
       <div class="chip-wrap" id="productChips"></div>
@@ -392,6 +427,27 @@
         <div class="pfc-warn" id="pfcWarn" style="display:none;"></div>
       </div>
       <div class="status-msg" id="pfcStatus"></div>
+    </div>
+
+    <div class="card" id="runGoalCard">
+      <h2>ラントレの目標</h2>
+      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">ジムのトレッドミルなどで走る目標です。初期値は「減量・習慣化」向けの目安です。</p>
+      <div class="row2">
+        <div><label>週の回数</label><input type="number" step="1" min="1" max="7" id="runPerWeek"></div>
+        <div><label>1回の時間(分)</label><input type="number" step="5" min="5" id="runMinutes"></div>
+      </div>
+      <label>走る速度の目安 (km/h)</label>
+      <input type="number" step="0.5" min="3" id="runSpeed">
+      <button class="primary" id="saveRunGoalBtn">ラントレ目標を保存</button>
+      <div class="run-summary" id="runSummary"></div>
+      <ul class="run-tips">
+        <li>ペースは「少し息が弾むが会話できる」強さ（最大心拍の60〜70%）</li>
+        <li>トレッドミルは傾斜1%で屋外に近い負荷になります</li>
+        <li>週の走行時間・距離は、前の週の10%増までにする（ケガ予防）</li>
+        <li>初心者は「1分走＋2分歩く」を8〜10セットから</li>
+        <li>筋トレと同日なら、筋トレを先に、ランを後に</li>
+        <li>減量は食事が主役。ランは消費を上乗せする位置づけです</li>
+      </ul>
     </div>
   </section>
 
@@ -488,7 +544,7 @@
 <nav class="tabbar">
   <button data-tab="dashboard" class="active"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span><span class="tl">統計</span></button>
   <button data-tab="add"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span><span class="tl">記録</span></button>
-  <button data-tab="meal"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4 3v5a3 3 0 006 0V3M7 11v10"/><path d="M17 21V3c-2.5 1.5-4 4.5-4 8h4"/></svg></span><span class="tl">食事</span></button>
+  <button data-tab="meal"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4 3v5a3 3 0 006 0V3M7 11v10"/><path d="M17 21V3c-2.5 1.5-4 4.5-4 8h4"/></svg></span><span class="tl">食事・運動</span></button>
   <button data-tab="goal"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span><span class="tl">目標</span></button>
   <button data-tab="settings"><span class="ti"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><span class="tl">設定</span></button>
 </nav>
@@ -1525,6 +1581,133 @@ document.getElementById('scanClose').addEventListener('click', stopScan);
 // renderAllの最後に食事表示も更新
 var _renderAllOrig = renderAll;
 renderAll = function(){ _renderAllOrig(); renderMeals(); };
+renderMeals();
+
+// ===== ラントレ目標 =====
+if(!state.runGoal) state.runGoal = { perWeek: 3, minutes: 30, speed: 7 };
+function renderRunGoal(){
+  var g = state.runGoal;
+  var recs = (state.records || []).slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  var w = recs.length ? recs[recs.length-1].weight : null;
+  var distPer = g.speed * g.minutes / 60;
+  var totalMin = g.perWeek * g.minutes;
+  var html = '週 <b>' + g.perWeek + '回 × ' + g.minutes + '分 ＝ ' + totalMin + '分</b>（時速' + g.speed + 'kmで1回約' + distPer.toFixed(1) + 'km、週' + (distPer*g.perWeek).toFixed(1) + 'km）';
+  if(w){ var kc = w * distPer; html += '<br>消費の目安：1回 約' + Math.round(kc) + 'kcal ／ 週 約' + Math.round(kc*g.perWeek) + 'kcal'; }
+  html += '<br><span style="color:var(--text-secondary); font-size:12px;">運動の推奨量（週150分以上）に' + (totalMin >= 150 ? '届いています' : '届いていません（あと' + (150-totalMin) + '分）') + '</span>';
+  document.getElementById('runSummary').innerHTML = html;
+}
+(function(){
+  var g = state.runGoal;
+  document.getElementById('runPerWeek').value = g.perWeek;
+  document.getElementById('runMinutes').value = g.minutes;
+  document.getElementById('runSpeed').value = g.speed;
+  document.getElementById('saveRunGoalBtn').addEventListener('click', function(){
+    var pw = parseInt(document.getElementById('runPerWeek').value, 10);
+    var mi = parseInt(document.getElementById('runMinutes').value, 10);
+    var sp = parseFloat(document.getElementById('runSpeed').value);
+    if(!(pw >= 1 && pw <= 7) || !(mi >= 5) || !(sp >= 3)){ document.getElementById('runSummary').textContent = '回数(1〜7)・時間(5分以上)・速度(3km/h以上)を入力してください'; return; }
+    state.runGoal = { perWeek: pw, minutes: mi, speed: sp };
+    persistState(); renderRunGoal();
+  });
+})();
+var _renderAllOrig2 = renderAll;
+renderAll = function(){ _renderAllOrig2(); renderRunGoal(); };
+renderRunGoal();
+
+// ===== カロリー収支・運動記録 =====
+if(!state.workouts) state.workouts = [];
+function latestWeightVal(){
+  var recs = (state.records || []).slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  return recs.length ? recs[recs.length-1].weight : null;
+}
+function calcBmrTdee(w, p){
+  if(!w || !p || !p.height || !p.age) return null;
+  var bmr = p.gender === 'female' ? (10*w + 6.25*p.height - 5*p.age - 161) : (10*w + 6.25*p.height - 5*p.age + 5);
+  return { bmr: bmr, tdee: bmr * (p.activity || 1.5) };
+}
+function exKcal(type, min, km, w){
+  if(!w) return null;
+  if(km && km > 0) return w * km * (type === 'run' ? 1.0 : 0.5);
+  if(min && min > 0){ var met = type === 'run' ? 7.0 : 3.5; return met * w * (min/60) * 1.05; }
+  return null;
+}
+function readEx(){
+  var min = parseFloat(document.getElementById('exMin').value);
+  var km = parseFloat(document.getElementById('exKm').value);
+  return { type: document.getElementById('exType').value, min: isNaN(min) ? null : min, km: isNaN(km) ? null : km };
+}
+function updateExPreview(){
+  var d = readEx(), w = latestWeightVal(), el = document.getElementById('exPreview');
+  var k = exKcal(d.type, d.min, d.km, w);
+  if(k === null){ el.textContent = w ? '時間か距離を入力すると、消費カロリーを計算します' : '体重の記録がないため計算できません'; return; }
+  var sp = (d.min && d.km) ? '（時速' + (d.km / (d.min/60)).toFixed(1) + 'km）' : '';
+  el.textContent = '消費の目安：約' + Math.round(k) + 'kcal' + sp;
+}
+['exType','exMin','exKm'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', updateExPreview);
+  document.getElementById(id).addEventListener('change', updateExPreview);
+});
+document.getElementById('exAddBtn').addEventListener('click', function(){
+  var d = readEx(), w = latestWeightVal(), st = document.getElementById('exStatus');
+  var k = exKcal(d.type, d.min, d.km, w);
+  if(k === null){ st.textContent = '時間か距離を入力してください'; st.className = 'status-msg err'; return; }
+  state.workouts.push({ id: Date.now(), date: mealDateEl.value || localDateStr(), type: d.type, min: d.min, km: d.km, kcal: k });
+  persistState();
+  document.getElementById('exMin').value = ''; document.getElementById('exKm').value = '';
+  st.textContent = '運動を追加しました'; st.className = 'status-msg ok';
+  updateExPreview(); renderMeals();
+});
+function renderBalance(){
+  var date = mealDateEl.value || localDateStr();
+  var intake = state.meals.filter(function(m){ return m.date === date; }).reduce(function(a,m){ return a + m.kcal; }, 0);
+  var exs = state.workouts.filter(function(x){ return x.date === date; });
+  var exKc = exs.reduce(function(a,x){ return a + x.kcal; }, 0);
+  var w = latestWeightVal();
+  var e = calcBmrTdee(w, state.profile);
+  var list = document.getElementById('exList');
+  if(!exs.length){ list.innerHTML = '<div class="empty-note">この日の運動はまだありません。</div>'; }
+  else {
+    list.innerHTML = exs.map(function(x){
+      var detail = (x.min ? x.min + '分' : '') + (x.min && x.km ? ' ／ ' : '') + (x.km ? x.km + 'km' : '');
+      return '<div class="meal-row"><div><div class="n">' + (x.type === 'run' ? 'ラン' : 'ウォーキング') + '</div><div class="s">' + detail + ' ／ 約' + Math.round(x.kcal) + 'kcal</div></div><button class="del" data-id="' + x.id + '">削除</button></div>';
+    }).join('');
+    list.querySelectorAll('.del').forEach(function(b){
+      b.addEventListener('click', function(){
+        state.workouts = state.workouts.filter(function(x){ return String(x.id) !== b.dataset.id; });
+        persistState(); renderMeals();
+      });
+    });
+  }
+  var valEl = document.getElementById('balValue'), noteEl = document.getElementById('balNote'), subEl = document.getElementById('balSub');
+  document.getElementById('balIn').textContent = Math.round(intake).toLocaleString();
+  document.getElementById('balEx').textContent = Math.round(exKc).toLocaleString();
+  if(!e){
+    valEl.textContent = '-'; valEl.className = 'bal-main';
+    document.getElementById('balBmr').textContent = '-'; document.getElementById('balDaily').textContent = '-';
+    subEl.textContent = '';
+    noteEl.textContent = '「設定」タブで身長・年齢などのプロフィールを保存すると、収支が計算されます。';
+    return;
+  }
+  var daily = e.tdee - e.bmr;
+  var out = e.tdee + exKc;
+  var bal = intake - out;
+  document.getElementById('balBmr').textContent = Math.round(e.bmr).toLocaleString();
+  document.getElementById('balDaily').textContent = Math.round(daily).toLocaleString();
+  valEl.textContent = (bal > 0 ? '+' : '') + Math.round(bal).toLocaleString();
+  var t = mealTargets();
+  var goalBal = t ? t.calories - e.tdee : null; // 目標の収支（マイナス＝減量）
+  var cls = 'mid';
+  if(bal > 0) cls = 'warn';
+  else if(goalBal !== null && bal <= Math.min(0, goalBal) * 0.5) cls = 'ok';
+  else if(goalBal === null && bal < 0) cls = 'ok';
+  valEl.className = 'bal-main ' + cls;
+  subEl.textContent = '摂取 ' + Math.round(intake).toLocaleString() + ' − 消費 ' + Math.round(out).toLocaleString() + ' kcal' + (goalBal !== null ? '　／　1日の目標収支の目安 ' + Math.round(goalBal).toLocaleString() + ' kcal' : '');
+  noteEl.textContent = intake === 0 ? 'まだ食事が記録されていないため、収支は消費分のマイナスだけが出ています。' : (bal > 0 ? '摂取が消費を上回っています（体重が増える方向）。' : (bal > -100 ? 'ほぼ収支ゼロです。減量には少しマイナスが必要です。' : 'マイナス収支です（体重が減る方向）。'));
+  if(goalBal !== null){ noteEl.textContent += ' ※「日常活動」は活動レベルの設定から推定した値で、運動記録とは別に計算しています。'; }
+}
+var _renderMealsOrig = renderMeals;
+renderMeals = function(){ _renderMealsOrig(); renderBalance(); };
+updateExPreview();
 renderMeals();
 </script>
 </body>
