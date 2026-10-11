@@ -1709,6 +1709,71 @@ var _renderMealsOrig = renderMeals;
 renderMeals = function(){ _renderMealsOrig(); renderBalance(); };
 updateExPreview();
 renderMeals();
+
+// ===== 数字のカウントアップ演出 =====
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var NUM_RE = /-?\d[\d,]*\.?\d*/;
+  var groups = {
+    dashboard: ['statLatest','stat7d','statGoal','streakValue','bestWeightValue','totalChangeValue'],
+    meal: ['balValue','balIn','balBmr','balDaily','balEx','mealKcal','mealP','mealF','mealC'],
+    goal: ['pfcCalories','pfcProtein','pfcFat','pfcCarb','progressPct']
+  };
+  function ease(t){ return 1 - Math.pow(1 - t, 3); }
+  function animateEl(el, fromZero){
+    var final = el.textContent;
+    var m = final.match(NUM_RE);
+    if(el._raf){ cancelAnimationFrame(el._raf); el._raf = null; }
+    if(!m || reduce){ el._val = m ? parseFloat(m[0].replace(/,/g,'')) : null; el._shown = final; return; }
+    var token = m[0];
+    var to = parseFloat(token.replace(/,/g,''));
+    var dec = (token.split('.')[1] || '').length;
+    var comma = token.indexOf(',') >= 0;
+    var from = fromZero ? 0 : (el._val != null ? el._val : 0);
+    el._val = to;
+    if(from === to){ el._shown = final; return; }
+    var t0 = null, dur = 750;
+    function fmt(v){
+      var t = v.toFixed(dec);
+      if(comma){ var p = t.split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); t = p.join('.'); }
+      return t;
+    }
+    function step(ts){
+      if(t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur);
+      var txt = p >= 1 ? final : final.replace(token, fmt(from + (to - from) * ease(p)));
+      el._shown = txt;
+      el.textContent = txt;
+      if(p < 1) el._raf = requestAnimationFrame(step); else el._raf = null;
+    }
+    el._raf = requestAnimationFrame(step);
+  }
+  var observer = new MutationObserver(function(muts){
+    muts.forEach(function(mu){
+      var el = mu.target.nodeType === 3 ? mu.target.parentNode : mu.target;
+      if(!el || el.textContent === el._shown) return;
+      animateEl(el, false);
+    });
+  });
+  Object.keys(groups).forEach(function(k){
+    groups[k].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el._shown = el.textContent;
+      observer.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+  });
+  // タブを開いたとき、その画面の数字を0から再生
+  document.querySelectorAll('nav.tabbar button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      (groups[btn.dataset.tab] || []).forEach(function(id){
+        var el = document.getElementById(id); if(el) animateEl(el, true);
+      });
+    });
+  });
+  // 初回表示
+  groups.dashboard.forEach(function(id){ var el = document.getElementById(id); if(el) animateEl(el, true); });
+})();
 </script>
 </body>
 </html>
