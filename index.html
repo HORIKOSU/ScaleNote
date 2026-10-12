@@ -147,6 +147,15 @@
   .bal-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; text-align:center; background:var(--page-plane); border-radius:14px; padding:10px 4px;}
   .bal-l{font-size:10px; color:var(--text-secondary);}
   .bal-v{font-size:14px; font-weight:700; margin-top:2px;}
+  .scan-frame{transition:border-color .15s, box-shadow .15s;}
+  .scan-overlay.ok .scan-frame{border-color:#3fd07a; animation:scanPulse .6s ease-out;}
+  .scan-check{position:absolute; width:96px; height:96px; border-radius:50%; background:#3fa66a; display:none; align-items:center; justify-content:center; box-shadow:0 8px 30px rgba(63,166,106,.55);}
+  .scan-overlay.ok .scan-check{display:flex; animation:scanPop .5s cubic-bezier(.2,1.6,.4,1) both;}
+  .scan-flash{position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none;}
+  .scan-overlay.ok .scan-flash{animation:scanFlash .45s ease-out;}
+  @keyframes scanPop{0%{transform:scale(0); opacity:0;} 100%{transform:scale(1); opacity:1;}}
+  @keyframes scanFlash{0%{opacity:.75;} 100%{opacity:0;}}
+  @keyframes scanPulse{0%{transform:scale(1);} 40%{transform:scale(1.06);} 100%{transform:scale(1);}}
   .onboarding-screen{min-height:100vh; padding:24px 0;}
   .onboard-hero{text-align:center; margin-bottom:20px;}
   .onboard-hero h1{margin:0 0 6px; font-size:24px;}
@@ -346,6 +355,9 @@
         <input type="text" inputmode="numeric" id="janInput" placeholder="バーコード番号（13桁）">
         <button id="janSearchBtn">検索</button>
       </div>
+      <label>食品名で検索（目安値）</label>
+      <input type="text" id="foodSearch" placeholder="例：おにぎり、サラダチキン、卵">
+      <div class="chip-wrap" id="foodResults" style="margin-top:8px;"></div>
       <button class="secondary" id="manualBtn">栄養成分を手入力で追加</button>
       <div class="status-msg" id="productStatus"></div>
       <div id="productForm" style="display:none;">
@@ -538,6 +550,8 @@
 <div id="scanOverlay" class="scan-overlay" style="display:none;">
   <video id="scanVideo" playsinline muted></video>
   <div class="scan-frame"></div>
+  <div class="scan-check"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+  <div class="scan-flash"></div>
   <div class="scan-hint" id="scanHint">バーコードを枠に合わせてください</div>
   <button id="scanClose" class="scan-close">閉じる</button>
 </div>
@@ -1533,11 +1547,32 @@ function stopScan(){
   var v = document.getElementById('scanVideo'); v.srcObject = null;
   document.getElementById('scanOverlay').style.display = 'none';
 }
+var scanLock = false;
+function scanBeep(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    var ctx = new AC(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = 1100; g.gain.value = 0.08;
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.12);
+    setTimeout(function(){ try{ ctx.close(); }catch(e){} }, 300);
+  }catch(e){}
+}
 function onScanned(code){
-  if(!scanning) return;
-  stopScan();
-  document.getElementById('janInput').value = code;
-  lookupBarcode(code);
+  if(!scanning || scanLock) return;
+  scanLock = true;
+  var overlay = document.getElementById('scanOverlay');
+  overlay.classList.add('ok');
+  document.getElementById('scanHint').textContent = '読み取りました';
+  scanBeep();
+  try{ if(navigator.vibrate) navigator.vibrate(80); }catch(e){}
+  setTimeout(function(){
+    overlay.classList.remove('ok');
+    scanLock = false;
+    if(!scanning) return;
+    stopScan();
+    document.getElementById('janInput').value = code;
+    lookupBarcode(code);
+  }, 800);
 }
 function loadZxing(cb){
   if(window.ZXing){ cb(); return; }
@@ -1553,7 +1588,7 @@ document.getElementById('scanBtn').addEventListener('click', function(){
     st.textContent = 'このブラウザではカメラを使えません。バーコード番号を手入力してください。'; st.className = 'status-msg err'; return;
   }
   var overlay = document.getElementById('scanOverlay'), video = document.getElementById('scanVideo');
-  overlay.style.display = 'flex'; scanning = true;
+  overlay.style.display = 'flex'; scanning = true; scanLock = false; overlay.classList.remove('ok');
   document.getElementById('scanHint').textContent = 'バーコードを枠に合わせてください';
   if('BarcodeDetector' in window){
     navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).then(function(stream){
@@ -1774,6 +1809,75 @@ renderMeals();
   // 初回表示
   groups.dashboard.forEach(function(id){ var el = document.getElementById(id); if(el) animateEl(el, true); });
 })();
+
+// ===== 食品名検索（一般的な目安値：日本食品標準成分表などを元にした代表値） =====
+var FOODS = [
+  // [名前, 1回量の説明, P, F, C, kcal, 別名]
+  ['おにぎり（鮭）','1個 約100g',4.5,0.9,38,180,'おむすび 鮭 しゃけ サケ'],
+  ['おにぎり（ツナマヨ）','1個 約110g',5,6,40,230,'おむすび ツナ マヨ'],
+  ['おにぎり（梅・昆布）','1個 約100g',3.5,0.4,38,170,'おむすび うめ こんぶ'],
+  ['ご飯（茶碗1杯）','150g',3.8,0.5,55,235,'白米 ごはん ライス 米'],
+  ['ご飯（大盛り）','250g',6.3,0.8,92,390,'白米 ごはん ライス 米'],
+  ['サラダチキン（プレーン）','1袋 約115g',27,1.7,0.6,130,'鶏むね チキン'],
+  ['鶏むね肉（皮なし）','100g',23,1.9,0,116,'とりむね 胸肉'],
+  ['鶏もも肉（皮つき）','100g',17,14,0,200,'とりもも 腿肉'],
+  ['ささみ','1本 約50g',11.5,0.4,0,55,'ササミ 鶏'],
+  ['豚ロース','100g',19,19,0.2,263,'ぶた ポーク'],
+  ['牛赤身肉','100g',20,11,0.3,180,'ぎゅう ビーフ 牛もも'],
+  ['鮭（焼き）','1切 約80g',17.8,3.3,0,106,'さけ サケ 魚'],
+  ['ツナ缶（水煮）','1缶 約70g',11,0.5,0.2,50,'ツナ まぐろ'],
+  ['ゆで卵','1個 約50g',6.2,5.2,0.2,75,'たまご 玉子 卵'],
+  ['卵（生）','1個 約60g',7.4,6.2,0.2,90,'たまご 玉子 卵'],
+  ['納豆','1パック 約45g',7.4,4.5,5.4,90,'なっとう'],
+  ['豆腐（木綿）','半丁 約150g',10,6,2,110,'とうふ'],
+  ['食パン（6枚切り）','1枚 約60g',5.3,2.5,28,150,'パン トースト'],
+  ['サンドイッチ（ハムたまご）','1パック',12,17,33,340,'サンド'],
+  ['サンドイッチ（たまご）','1パック',11,22,30,370,'サンド 玉子'],
+  ['オートミール','30g',4,1.8,20,115,'オーツ'],
+  ['バナナ','1本 可食部約100g',1.1,0.2,22.5,86,'ばなな 果物'],
+  ['りんご','1個 約250g',0.3,0.5,35,135,'リンゴ 果物'],
+  ['ブロッコリー','100g',4.3,0.5,5.2,33,'野菜'],
+  ['カット野菜サラダ','1袋 約100g',1.3,0.2,4.5,22,'サラダ 野菜'],
+  ['味噌汁','1杯',2,1,4,35,'みそしる みそ汁'],
+  ['プレーンヨーグルト（無糖）','100g',3.6,3,4.9,62,'ヨーグルト'],
+  ['ギリシャヨーグルト','1個 約100g',10,0.3,4,60,'ヨーグルト'],
+  ['牛乳','200ml',6.8,7.9,9.9,138,'ミルク'],
+  ['プロテイン（ホエイ）','1杯 約30g',23,1.5,3,115,'ホエイ プロテインパウダー'],
+  ['プロテインバー','1本',15,8,15,190,'バー'],
+  ['アーモンド','10粒 約14g',3,7,3,85,'ナッツ'],
+  ['唐揚げ','1個 約40g',6.4,6.8,4.4,115,'からあげ 鶏'],
+  ['牛丼（並）','1杯',21,21,95,650,'ぎゅうどん'],
+  ['カレーライス','1皿',17,22,105,700,'カレー'],
+  ['ラーメン（醤油）','1杯',22,12,75,500,'らーめん 麺'],
+  ['うどん（かけ）','1杯',10,2,55,290,'饂飩 麺'],
+  ['そば（もり）','1枚',12,2,55,300,'蕎麦 麺'],
+  ['パスタ（ミートソース）','1皿',20,18,85,600,'スパゲッティ'],
+  ['カップ麺（醤油）','1個',10,17,52,380,'カップラーメン インスタント'],
+  ['ポテトチップス','1袋 約60g',2.8,21,32,335,'ポテチ スナック お菓子'],
+  ['アイス（バニラ）','1個 約100g',2,8,22,180,'アイスクリーム'],
+  ['ビール','350ml',1,0,11,140,'お酒 アルコール'],
+  ['コーラ','500ml',0,0,56,225,'ジュース 炭酸']
+];
+function toHira(t){ return String(t).replace(/[\u30a1-\u30f6]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0x60); }).toLowerCase(); }
+document.getElementById('foodSearch').addEventListener('input', function(){
+  var q = toHira(this.value.trim());
+  var box = document.getElementById('foodResults');
+  if(!q){ box.innerHTML = ''; return; }
+  var hits = FOODS.map(function(f, i){ return { f: f, i: i }; }).filter(function(x){
+    return toHira(x.f[0] + ' ' + x.f[6]).indexOf(q) >= 0;
+  }).slice(0, 10);
+  if(!hits.length){ box.innerHTML = '<div class="empty-note" style="width:100%; padding:8px 0;">見つかりませんでした。「栄養成分を手入力で追加」をお使いください。</div>'; return; }
+  box.innerHTML = hits.map(function(x){ return '<button class="chip" data-i="' + x.i + '">' + escHtml(x.f[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(x.f[1]) + '</span></button>'; }).join('');
+  box.querySelectorAll('.chip').forEach(function(b){
+    b.addEventListener('click', function(){
+      var f = FOODS[parseInt(b.dataset.i, 10)];
+      var st = document.getElementById('productStatus');
+      st.textContent = '一般的な目安値です（1回量：' + f[1] + '）。商品によって異なるので、必要なら数値を修正してください。'; st.className = 'status-msg ok';
+      showProductForm({ name: f[0] + '（' + f[1] + '）', basis: 'serving', p: f[2], f: f[3], c: f[4], k: f[5], amount: 1 });
+      document.getElementById('productForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+});
 </script>
 </body>
 </html>
