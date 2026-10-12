@@ -156,6 +156,10 @@
   @keyframes scanPop{0%{transform:scale(0); opacity:0;} 100%{transform:scale(1); opacity:1;}}
   @keyframes scanFlash{0%{opacity:.75;} 100%{opacity:0;}}
   @keyframes scanPulse{0%{transform:scale(1);} 40%{transform:scale(1.06);} 100%{transform:scale(1);}}
+  .split-row{margin-bottom:14px;}
+  .split-head{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; font-weight:700; margin-bottom:6px;}
+  .split-val{font-size:13px; font-weight:700;}
+  .split-sub{font-size:11px; color:var(--text-secondary); margin-top:5px;}
   .onboarding-screen{min-height:100vh; padding:24px 0;}
   .onboard-hero{text-align:center; margin-bottom:20px;}
   .onboard-hero h1{margin:0 0 6px; font-size:24px;}
@@ -348,6 +352,20 @@
       <div class="status-msg" id="mealTargetNote"></div>
     </div>
 
+    <div class="card" id="splitCard">
+      <h2>時間帯の配分</h2>
+      <div class="split-row">
+        <div class="split-head"><span id="splitDayLabel">日中（〜17時）</span><span class="split-val" id="splitDayVal">0 / - kcal</span></div>
+        <div class="meal-bar"><div id="splitDayBar" style="width:0%;"></div></div>
+        <div class="split-sub" id="splitDaySub"></div>
+      </div>
+      <div class="split-row">
+        <div class="split-head"><span id="splitNightLabel">夜（17時〜）</span><span class="split-val" id="splitNightVal">0 kcal</span></div>
+        <div class="meal-bar"><div id="splitNightBar" style="width:0%;"></div></div>
+        <div class="split-sub" id="splitNightSub"></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>商品を追加</h2>
       <button class="primary" id="scanBtn" style="margin-top:0;">バーコードを読み取る</button>
@@ -378,6 +396,8 @@
         </div>
         <label id="pfAmountLabel">食べた個数</label>
         <input type="number" step="0.1" id="pfAmount" value="1">
+        <label>食べた時刻</label>
+        <input type="time" id="pfTime">
         <div class="pf-preview" id="pfPreview"></div>
         <button class="primary" id="pfAddBtn">この内容で食事に追加</button>
         <button class="secondary" id="pfCancelBtn">キャンセル</button>
@@ -515,6 +535,16 @@
         </div>
       </div>
       <button class="primary" id="saveProfileBtn">プロフィールを保存してPFC計算</button>
+    </div>
+    <div class="card">
+      <h2>日中の食事の目安</h2>
+      <p style="font-size:12px; color:var(--text-secondary); margin:0 0 4px;">日中はあまり食べず、夜にしっかり食べる運用向けの設定です。食事タブの「時間帯の配分」に使います。</p>
+      <div class="row2">
+        <div><label>日中の区切り（時）</label><select id="dayHour"></select></div>
+        <div><label>日中の上限（目標の%）</label><input type="number" step="5" min="10" max="80" id="dayPct"></div>
+      </div>
+      <button class="primary" id="saveDayBtn">保存</button>
+      <div class="status-msg" id="dayStatus"></div>
     </div>
     <div class="card">
       <h2>データ管理</h2>
@@ -1405,7 +1435,7 @@ function renderMeals(){
   if(!items.length){ list.innerHTML = '<div class="empty-note">この日の食事はまだありません。</div>'; }
   else {
     list.innerHTML = items.map(function(m){
-      return '<div class="meal-row"><div><div class="n">' + escHtml(m.name) + '</div><div class="s">' + Math.round(m.kcal) + 'kcal ／ P ' + r1(m.p) + 'g ／ F ' + r1(m.f) + 'g ／ C ' + r1(m.c) + 'g</div></div><button class="del" data-id="' + m.id + '">削除</button></div>';
+      return '<div class="meal-row"><div><div class="n">' + escHtml(m.name) + '</div><div class="s">' + (m.time ? m.time + ' ／ ' : '') + Math.round(m.kcal) + 'kcal ／ P ' + r1(m.p) + 'g ／ F ' + r1(m.f) + 'g ／ C ' + r1(m.c) + 'g</div></div><button class="del" data-id="' + m.id + '">削除</button></div>';
     }).join('');
     list.querySelectorAll('.del').forEach(function(b){
       b.addEventListener('click', function(){
@@ -1434,9 +1464,10 @@ function calcFromProduct(p, amount){
   var kcal = (p.k !== null && p.k !== undefined && !isNaN(p.k)) ? p.k : (p.p*4 + p.f*9 + p.c*4);
   return { p: p.p*mul, f: p.f*mul, c: p.c*mul, kcal: kcal*mul };
 }
-function addMealFromProduct(p, amount){
+function nowTimeStr(){ var d = new Date(); return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2); }
+function addMealFromProduct(p, amount, timeStr){
   var v = calcFromProduct(p, amount);
-  state.meals.push({ id: Date.now() + Math.floor(Math.random()*1000), date: mealDateEl.value || localDateStr(), name: p.name, p: v.p, f: v.f, c: v.c, kcal: v.kcal });
+  state.meals.push({ id: Date.now() + Math.floor(Math.random()*1000), date: mealDateEl.value || localDateStr(), name: p.name, p: v.p, f: v.f, c: v.c, kcal: v.kcal, time: timeStr || nowTimeStr() });
   p.used = (p.used || 0) + 1; p.lastAmount = amount;
   persistState(); renderMeals();
 }
@@ -1452,6 +1483,7 @@ function showProductForm(prod){
   document.getElementById('pfC').value = prod.c != null ? prod.c : '';
   document.getElementById('pfK').value = prod.k != null ? prod.k : '';
   document.getElementById('pfAmount').value = prod.amount != null ? prod.amount : (prod.basis === '100g' ? 100 : 1);
+  document.getElementById('pfTime').value = nowTimeStr();
   updatePfLabels(); updatePfPreview();
 }
 function readPf(){
@@ -1487,7 +1519,7 @@ document.getElementById('pfAddBtn').addEventListener('click', function(){
   var prod = state.products[key] || { key: key, used: 0 };
   prod.name = d.name; prod.basis = d.basis; prod.p = d.p; prod.f = d.f; prod.c = d.c; prod.k = d.k; prod.code = code;
   state.products[key] = prod;
-  addMealFromProduct(prod, d.amount);
+  addMealFromProduct(prod, d.amount, document.getElementById('pfTime').value || nowTimeStr());
   document.getElementById('productForm').style.display = 'none'; pendingProduct = null;
   document.getElementById('janInput').value = '';
   st.textContent = '「' + d.name + '」を食事に追加しました'; st.className = 'status-msg ok';
@@ -1878,6 +1910,55 @@ document.getElementById('foodSearch').addEventListener('input', function(){
     });
   });
 });
+
+// ===== 日中／夜の配分 =====
+if(!state.dayLimit) state.dayLimit = { hour: 17, pct: 35 };
+(function(){
+  var sel = document.getElementById('dayHour');
+  for(var h = 12; h <= 21; h++){ var o = document.createElement('option'); o.value = h; o.textContent = h + '時'; sel.appendChild(o); }
+  sel.value = state.dayLimit.hour; document.getElementById('dayPct').value = state.dayLimit.pct;
+  document.getElementById('saveDayBtn').addEventListener('click', function(){
+    var h = parseInt(sel.value, 10), p = parseInt(document.getElementById('dayPct').value, 10);
+    var st = document.getElementById('dayStatus');
+    if(!(p >= 10 && p <= 80)){ st.textContent = '上限は10〜80%で入力してください'; st.className = 'status-msg err'; return; }
+    state.dayLimit = { hour: h, pct: p }; persistState(); renderMeals();
+    st.textContent = '保存しました'; st.className = 'status-msg ok';
+  });
+})();
+function renderSplit(){
+  var date = mealDateEl.value || localDateStr();
+  var hr = state.dayLimit.hour, pct = state.dayLimit.pct;
+  var day = {k:0,p:0}, night = {k:0,p:0};
+  state.meals.filter(function(m){ return m.date === date; }).forEach(function(m){
+    var h = m.time ? parseInt(m.time.split(':')[0], 10) : 99;
+    var tgt = h < hr ? day : night; tgt.k += m.kcal; tgt.p += m.p;
+  });
+  var t = mealTargets();
+  document.getElementById('splitDayLabel').textContent = '日中（〜' + hr + '時）';
+  document.getElementById('splitNightLabel').textContent = '夜（' + hr + '時〜）';
+  var dayVal = document.getElementById('splitDayVal'), daySub = document.getElementById('splitDaySub');
+  var nightVal = document.getElementById('splitNightVal'), nightSub = document.getElementById('splitNightSub');
+  if(t){
+    var cap = Math.round(t.calories * pct / 100);
+    dayVal.textContent = Math.round(day.k).toLocaleString() + ' / ' + cap.toLocaleString() + ' kcal';
+    var el = document.getElementById('splitDayBar'); el.style.width = Math.min(100, day.k / cap * 100) + '%'; el.className = day.k > cap ? 'over' : '';
+    daySub.textContent = day.k > cap ? '日中の目安を ' + Math.round(day.k - cap) + 'kcal 超えています（眠気が出やすくなる場合があります）' : 'あと ' + Math.round(cap - day.k) + 'kcal まで。タンパク質 ' + r1(day.p) + 'g（目安：50〜60g）';
+    var total = day.k + night.k, left = t.calories - total;
+    nightVal.textContent = Math.round(night.k).toLocaleString() + ' kcal';
+    var nb = document.getElementById('splitNightBar'); nb.style.width = Math.min(100, total / t.calories * 100) + '%'; nb.className = total > t.calories ? 'over' : '';
+    nightSub.textContent = left >= 0 ? '1日の目標まで、あと ' + Math.round(left).toLocaleString() + 'kcal 食べられます' : '1日の目標を ' + Math.round(-left).toLocaleString() + 'kcal 超えています';
+  } else {
+    dayVal.textContent = Math.round(day.k).toLocaleString() + ' kcal';
+    document.getElementById('splitDayBar').style.width = '0%';
+    daySub.textContent = '目標とプロフィールを保存すると、日中の目安が表示されます。';
+    nightVal.textContent = Math.round(night.k).toLocaleString() + ' kcal';
+    document.getElementById('splitNightBar').style.width = '0%';
+    nightSub.textContent = '';
+  }
+}
+var _renderMealsOrig3 = renderMeals;
+renderMeals = function(){ _renderMealsOrig3(); renderSplit(); };
+renderMeals();
 </script>
 </body>
 </html>
