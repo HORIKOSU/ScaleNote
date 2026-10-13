@@ -117,6 +117,13 @@
   .meal-bar{background:#eceff6; border-radius:999px; height:10px; overflow:hidden;}
   .meal-bar > div{height:100%; border-radius:999px; background:var(--series-1); transition:width .3s;}
   .meal-bar.sm{height:7px;}
+  .kcal-stack{display:flex; gap:2px; background:#eceff6; border-radius:999px; height:12px; overflow:hidden;}
+  .kcal-stack .seg{height:100%; transition:width .3s; min-width:0;}
+  .kcal-stack .seg.p{background:#3fa66a;} .kcal-stack .seg.f{background:#e0a92e;} .kcal-stack .seg.c{background:#2a78d6;}
+  .kcal-stack.over{box-shadow:0 0 0 2px #e5534b inset;}
+  .kcal-legend{display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:7px; font-size:11px; color:var(--text-secondary);}
+  .kcal-legend i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px;}
+  .kcal-legend i.p{background:#3fa66a;} .kcal-legend i.f{background:#e0a92e;} .kcal-legend i.c{background:#2a78d6;}
   .meal-bar.p > div{background:#3fa66a;} .meal-bar.f > div{background:#e0a92e;} .meal-bar.c > div{background:#2a78d6;}
   .meal-bar > div.over{background:#e5534b;}
   .meal-pfc{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;}
@@ -343,7 +350,8 @@
         <input type="date" id="mealDate" class="meal-date">
       </div>
       <div class="meal-kcal"><span id="mealKcal">0</span><span class="meal-kcal-t" id="mealKcalTarget"> kcal</span></div>
-      <div class="meal-bar"><div id="mealKcalBar" style="width:0%;"></div></div>
+      <div class="kcal-stack" id="mealKcalStack"><div class="seg p" style="width:0%;"></div><div class="seg f" style="width:0%;"></div><div class="seg c" style="width:0%;"></div></div>
+      <div class="kcal-legend" id="mealKcalLegend"><span><i class="p"></i>タンパク質 0</span><span><i class="f"></i>脂質 0</span><span><i class="c"></i>炭水化物 0</span></div>
       <div class="meal-pfc">
         <div class="meal-pfc-item"><div class="meal-pfc-l">タンパク質</div><div class="meal-pfc-v" id="mealP">0g</div><div class="meal-bar sm p"><div id="mealPBar" style="width:0%;"></div></div></div>
         <div class="meal-pfc-item"><div class="meal-pfc-l">脂質</div><div class="meal-pfc-v" id="mealF">0g</div><div class="meal-bar sm f"><div id="mealFBar" style="width:0%;"></div></div></div>
@@ -1429,7 +1437,18 @@ function renderMeals(){
   document.getElementById('mealP').textContent = r1(tot.p) + 'g' + (t ? ' / ' + t.proteinG + 'g' : '');
   document.getElementById('mealF').textContent = r1(tot.f) + 'g' + (t ? ' / ' + t.fatG + 'g' : '');
   document.getElementById('mealC').textContent = r1(tot.c) + 'g' + (t ? ' / ' + t.carbG + 'g' : '');
-  barSet('mealKcalBar', tot.k, t && t.calories);
+  (function(){
+    var kp = tot.p*4, kf = tot.f*9, kc = tot.c*4, ks = kp+kf+kc;
+    var base = Math.max(t ? t.calories : 0, ks) || 1;
+    var segs = document.querySelectorAll('#mealKcalStack .seg');
+    [kp,kf,kc].forEach(function(v,i){ segs[i].style.width = (v/base*100) + '%'; });
+    document.getElementById('mealKcalStack').classList.toggle('over', !!(t && ks > t.calories));
+    var pc = function(v){ return ks ? Math.round(v/ks*100) : 0; };
+    document.getElementById('mealKcalLegend').innerHTML =
+      '<span><i class="p"></i>タンパク質 ' + Math.round(kp) + 'kcal（' + pc(kp) + '%）</span>' +
+      '<span><i class="f"></i>脂質 ' + Math.round(kf) + 'kcal（' + pc(kf) + '%）</span>' +
+      '<span><i class="c"></i>炭水化物 ' + Math.round(kc) + 'kcal（' + pc(kc) + '%）</span>';
+  })();
   barSet('mealPBar', tot.p, t && t.proteinG);
   barSet('mealFBar', tot.f, t && t.fatG);
   barSet('mealCBar', tot.c, t && t.carbG);
@@ -1853,9 +1872,10 @@ var FOODS = [
   ['ミックスサンド（セブン-イレブン）','1個',11,14.3,29.8,288,'サンドイッチ サンド コンビニ セブン'],
   ['ミックスサンド（ローソン）','1食',11.3,16,27.8,297,'サンドイッチ サンド コンビニ'],
   ['ザバス MILK PROTEIN 脂肪0 ストロベリー','1本 200ml',20,0,6.9,107,'savas ミルクプロテイン プロテイン 明治 飲み物 ドリンク'],
-  ['ビッグマックセット（ポテトM・コーラM）','1セット',31.6,47.8,131,1079,'マクドナルド マック ハンバーガー 外食'],
+  ['ビッグマックセット（ポテトM・メロンソーダM）','1セット',31.6,47.8,135.4,1098,'マクドナルド マック ハンバーガー 外食'],
   ['ビッグマック（単品）','1個',26.1,28,42.1,525,'マクドナルド マック ハンバーガー 外食'],
   ['マックフライポテト（M）','1個',5.5,19.8,52.4,409,'マクドナルド ポテト 外食'],
+  ['メロンソーダ（M）マクドナルド','1杯',0,0,40.9,164,'マクドナルド ファンタ メロン 飲み物 ドリンク 外食'],
   ['コカ・コーラ（Mサイズ）マクドナルド','1杯',0,0,36.5,145,'マクドナルド コーラ 飲み物 ドリンク 外食'],
   ['焼魚牛小鉢定食（吉野家）','1人前',24.4,19.6,88.5,622,'吉野家 定食 外食 魚'],
   ['おにぎり（鮭）','1個 約100g',4.5,0.9,38,180,'おむすび 鮭 しゃけ サケ'],
@@ -1932,7 +1952,7 @@ function openFood(i){
   box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
 })();
 (function(){
-  var favs = ['オイコス ヨーグルト ピーチ（ダノン）|1カップ 113g','ミックスサンド（セブン-イレブン）|1個','ミックスサンド（ローソン）|1食','ザバス MILK PROTEIN 脂肪0 ストロベリー|1本 200ml','ビッグマックセット（ポテトM・コーラM）|1セット','焼魚牛小鉢定食（吉野家）|1人前'];
+  var favs = ['オイコス ヨーグルト ピーチ（ダノン）|1カップ 113g','ミックスサンド（セブン-イレブン）|1個','ミックスサンド（ローソン）|1食','ザバス MILK PROTEIN 脂肪0 ストロベリー|1本 200ml','ビッグマックセット（ポテトM・メロンソーダM）|1セット','焼魚牛小鉢定食（吉野家）|1人前'];
   var box = document.getElementById('favFoods');
   box.innerHTML = favs.map(function(k){
     var n = k.split('|'); var idx = -1;
