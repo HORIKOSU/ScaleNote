@@ -119,11 +119,10 @@
   .meal-bar.sm{height:7px;}
   .kcal-stack{display:flex; gap:2px; background:#eceff6; border-radius:999px; height:12px; overflow:hidden;}
   .kcal-stack .seg{height:100%; transition:width .3s; min-width:0;}
-  .kcal-stack .seg.p{background:#3fa66a;} .kcal-stack .seg.f{background:#e0a92e;} .kcal-stack .seg.c{background:#2a78d6;}
   .kcal-stack.over{box-shadow:0 0 0 2px #e5534b inset;}
   .kcal-legend{display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:7px; font-size:11px; color:var(--text-secondary);}
   .kcal-legend i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px;}
-  .kcal-legend i.p{background:#3fa66a;} .kcal-legend i.f{background:#e0a92e;} .kcal-legend i.c{background:#2a78d6;}
+  .kcal-legend span{display:inline-flex; align-items:center;}
   .meal-bar.p > div{background:#3fa66a;} .meal-bar.f > div{background:#e0a92e;} .meal-bar.c > div{background:#2a78d6;}
   .meal-bar > div.over{background:#e5534b;}
   .meal-pfc{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;}
@@ -350,8 +349,8 @@
         <input type="date" id="mealDate" class="meal-date">
       </div>
       <div class="meal-kcal"><span id="mealKcal">0</span><span class="meal-kcal-t" id="mealKcalTarget"> kcal</span></div>
-      <div class="kcal-stack" id="mealKcalStack"><div class="seg p" style="width:0%;"></div><div class="seg f" style="width:0%;"></div><div class="seg c" style="width:0%;"></div></div>
-      <div class="kcal-legend" id="mealKcalLegend"><span><i class="p"></i>タンパク質 0</span><span><i class="f"></i>脂質 0</span><span><i class="c"></i>炭水化物 0</span></div>
+      <div class="kcal-stack" id="mealKcalStack"></div>
+      <div class="kcal-legend" id="mealKcalLegend"></div>
       <div class="meal-pfc">
         <div class="meal-pfc-item"><div class="meal-pfc-l">タンパク質</div><div class="meal-pfc-v" id="mealP">0g</div><div class="meal-bar sm p"><div id="mealPBar" style="width:0%;"></div></div></div>
         <div class="meal-pfc-item"><div class="meal-pfc-l">脂質</div><div class="meal-pfc-v" id="mealF">0g</div><div class="meal-bar sm f"><div id="mealFBar" style="width:0%;"></div></div></div>
@@ -364,12 +363,12 @@
       <h2>時間帯の配分</h2>
       <div class="split-row">
         <div class="split-head"><span id="splitDayLabel">日中（〜17時）</span><span class="split-val" id="splitDayVal">0 / - kcal</span></div>
-        <div class="meal-bar"><div id="splitDayBar" style="width:0%;"></div></div>
+        <div class="kcal-stack" id="splitDayBar"></div>
         <div class="split-sub" id="splitDaySub"></div>
       </div>
       <div class="split-row">
         <div class="split-head"><span id="splitNightLabel">夜（17時〜）</span><span class="split-val" id="splitNightVal">0 kcal</span></div>
-        <div class="meal-bar"><div id="splitNightBar" style="width:0%;"></div></div>
+        <div class="kcal-stack" id="splitNightBar"></div>
         <div class="split-sub" id="splitNightSub"></div>
       </div>
     </div>
@@ -1420,6 +1419,7 @@ mealDateEl.value = localDateStr();
 mealDateEl.addEventListener('change', function(){ renderMeals(); });
 var pendingProduct = null; // {code, name, basis, p,f,c,k}
 
+var MEAL_PAL = ['#2a78d6','#eb6834','#3fa66a','#e0a92e','#8b5cf6','#14b8a6','#ec4899','#64748b'];
 function barSet(id, val, target){
   var el = document.getElementById(id);
   if(!target){ el.style.width = '0%'; el.className = ''; return; }
@@ -1438,16 +1438,16 @@ function renderMeals(){
   document.getElementById('mealF').textContent = r1(tot.f) + 'g' + (t ? ' / ' + t.fatG + 'g' : '');
   document.getElementById('mealC').textContent = r1(tot.c) + 'g' + (t ? ' / ' + t.carbG + 'g' : '');
   (function(){
-    var kp = tot.p*4, kf = tot.f*9, kc = tot.c*4, ks = kp+kf+kc;
-    var base = Math.max(t ? t.calories : 0, ks) || 1;
-    var segs = document.querySelectorAll('#mealKcalStack .seg');
-    [kp,kf,kc].forEach(function(v,i){ segs[i].style.width = (v/base*100) + '%'; });
-    document.getElementById('mealKcalStack').classList.toggle('over', !!(t && ks > t.calories));
-    var pc = function(v){ return ks ? Math.round(v/ks*100) : 0; };
-    document.getElementById('mealKcalLegend').innerHTML =
-      '<span><i class="p"></i>タンパク質 ' + Math.round(kp) + 'kcal（' + pc(kp) + '%）</span>' +
-      '<span><i class="f"></i>脂質 ' + Math.round(kf) + 'kcal（' + pc(kf) + '%）</span>' +
-      '<span><i class="c"></i>炭水化物 ' + Math.round(kc) + 'kcal（' + pc(kc) + '%）</span>';
+    var pal = MEAL_PAL;
+    var base = Math.max(t ? t.calories : 0, tot.k) || 1;
+    var stack = document.getElementById('mealKcalStack');
+    stack.innerHTML = items.map(function(m,i){
+      return '<div class="seg" title="' + escHtml(m.name) + '" style="width:' + (Math.max(0,m.kcal)/base*100) + '%;background:' + pal[i % pal.length] + ';"></div>';
+    }).join('');
+    stack.classList.toggle('over', !!(t && tot.k > t.calories));
+    document.getElementById('mealKcalLegend').innerHTML = items.map(function(m,i){
+      return '<span><i style="background:' + pal[i % pal.length] + ';"></i>' + escHtml(m.name) + ' ' + Math.round(m.kcal) + 'kcal</span>';
+    }).join('');
   })();
   barSet('mealPBar', tot.p, t && t.proteinG);
   barSet('mealFBar', tot.f, t && t.fatG);
@@ -1987,8 +1987,18 @@ if(!state.dayLimit) state.dayLimit = { hour: 17, pct: 35 };
     st.textContent = '保存しました'; st.className = 'status-msg ok';
   });
 })();
+function stackFill(id, list, base, over){
+  var el = document.getElementById(id);
+  el.innerHTML = base ? list.map(function(x){
+    return '<div class="seg" title="' + escHtml(x.m.name) + '" style="width:' + (Math.max(0,x.m.kcal)/base*100) + '%;background:' + MEAL_PAL[x.i % MEAL_PAL.length] + ';"></div>';
+  }).join('') : '';
+  el.classList.toggle('over', !!over);
+}
 function renderSplit(){
   var date = mealDateEl.value || localDateStr();
+  var allItems = state.meals.filter(function(m){ return m.date === date; }).map(function(m,i){ return {m:m,i:i}; });
+  var dayList = [], nightList = [];
+  allItems.forEach(function(x){ var h = x.m.time ? parseInt(x.m.time.split(':')[0],10) : 99; (h < state.dayLimit.hour ? dayList : nightList).push(x); });
   var hr = state.dayLimit.hour, pct = state.dayLimit.pct;
   var day = {k:0,p:0}, night = {k:0,p:0};
   state.meals.filter(function(m){ return m.date === date; }).forEach(function(m){
@@ -2003,18 +2013,18 @@ function renderSplit(){
   if(t){
     var cap = Math.round(t.calories * pct / 100);
     dayVal.textContent = Math.round(day.k).toLocaleString() + ' / ' + cap.toLocaleString() + ' kcal';
-    var el = document.getElementById('splitDayBar'); el.style.width = Math.min(100, day.k / cap * 100) + '%'; el.className = day.k > cap ? 'over' : '';
+    stackFill('splitDayBar', dayList, Math.max(cap, day.k), day.k > cap);
     daySub.textContent = day.k > cap ? '日中の目安を ' + Math.round(day.k - cap) + 'kcal 超えています（眠気が出やすくなる場合があります）' : 'あと ' + Math.round(cap - day.k) + 'kcal まで。タンパク質 ' + r1(day.p) + 'g（目安：50〜60g）';
     var total = day.k + night.k, left = t.calories - total;
     nightVal.textContent = Math.round(night.k).toLocaleString() + ' kcal';
-    var nb = document.getElementById('splitNightBar'); nb.style.width = Math.min(100, total / t.calories * 100) + '%'; nb.className = total > t.calories ? 'over' : '';
+    stackFill('splitNightBar', allItems, Math.max(t.calories, total), total > t.calories);
     nightSub.textContent = left >= 0 ? '1日の目標まで、あと ' + Math.round(left).toLocaleString() + 'kcal 食べられます' : '1日の目標を ' + Math.round(-left).toLocaleString() + 'kcal 超えています';
   } else {
     dayVal.textContent = Math.round(day.k).toLocaleString() + ' kcal';
-    document.getElementById('splitDayBar').style.width = '0%';
+    stackFill('splitDayBar', [], 0, false);
     daySub.textContent = '目標とプロフィールを保存すると、日中の目安が表示されます。';
     nightVal.textContent = Math.round(night.k).toLocaleString() + ' kcal';
-    document.getElementById('splitNightBar').style.width = '0%';
+    stackFill('splitNightBar', [], 0, false);
     nightSub.textContent = '';
   }
 }
