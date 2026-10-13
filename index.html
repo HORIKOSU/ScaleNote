@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ScaleNote｜体重記録ダッシュボード</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3Ekg%3C/text%3E%3C/svg%3E">
 <script>/*!
@@ -26,7 +26,8 @@
     --surface-1:#ffffff; --page-plane:#f5f6fb; --text-primary:#1c1c1c; --text-secondary:#6b6b6b;
     --border:rgba(11,11,11,0.10); --radius-card:16px;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; touch-action:manipulation; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
   body{margin:0; background:var(--page-plane); color:var(--text-primary); font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; padding-bottom:120px; overflow-x:hidden;}
   header.app-header{background:transparent; color:var(--text-primary); padding:calc(22px + env(safe-area-inset-top)) 20px 8px; margin-bottom:8px; max-width:720px; margin-left:auto; margin-right:auto;}
   header.app-header h1{margin:0; font-size:22px; font-weight:800; letter-spacing:.01em;}
@@ -1464,7 +1465,7 @@ function renderMeals(){
       var st = pc < lo ? '少なめ' : (pc > hi ? '多め' : '範囲内');
       return n + ' <b class="' + c + '">' + pc + '%（' + st + '）</b>目安 ' + lo + '〜' + hi + '%';
     }
-    box.innerHTML = '摂取カロリーに占める割合<br>' + row('タンパク質', kp, 13, 20) + '<br>' + row('脂質', kf, 20, 30) + '<br>' + row('炭水化物', kc, 50, 65);
+    box.innerHTML = '摂取カロリーに占める割合<br>' + row('タンパク質', kp, 15, 25) + '<br>' + row('脂質', kf, 20, 30) + '<br>' + row('炭水化物', kc, 45, 60);
   })();
   barSet('mealFBar', tot.f, t && t.fatG);
   barSet('mealCBar', tot.c, t && t.carbG);
@@ -2053,6 +2054,16 @@ function renderSplit(){
 var _renderMealsOrig3 = renderMeals;
 renderMeals = function(){ _renderMealsOrig3(); renderSplit(); };
 renderMeals();
+
+(function(){
+  var last = 0;
+  document.addEventListener('touchend', function(e){
+    var now = Date.now();
+    if(now - last < 350 && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))) e.preventDefault();
+    last = now;
+  }, {passive:false});
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+})();
 </script>
 </body>
 </html>
