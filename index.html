@@ -376,6 +376,8 @@
       <label>食品名で検索（目安値）</label>
       <input type="text" id="foodSearch" placeholder="例：おにぎり、サラダチキン、卵">
       <div class="chip-wrap" id="foodResults" style="margin-top:8px;"></div>
+      <label>よく飲む飲み物（目安値）</label>
+      <div class="chip-wrap" id="favDrinks"></div>
       <button class="secondary" id="manualBtn">栄養成分を手入力で追加</button>
       <div class="status-msg" id="productStatus"></div>
       <div id="productForm" style="display:none;">
@@ -1873,7 +1875,7 @@ var FOODS = [
   ['味噌汁','1杯',2,1,4,35,'みそしる みそ汁'],
   ['プレーンヨーグルト（無糖）','100g',3.6,3,4.9,62,'ヨーグルト'],
   ['ギリシャヨーグルト','1個 約100g',10,0.3,4,60,'ヨーグルト'],
-  ['牛乳','200ml',6.8,7.9,9.9,138,'ミルク'],
+  ['牛乳','200ml',6.8,7.9,9.9,138,'ミルク 飲み物 ドリンク'],
   ['プロテイン（ホエイ）','1杯 約30g',23,1.5,3,115,'ホエイ プロテインパウダー'],
   ['プロテインバー','1本',15,8,15,190,'バー'],
   ['アーモンド','10粒 約14g',3,7,3,85,'ナッツ'],
@@ -1887,10 +1889,33 @@ var FOODS = [
   ['カップ麺（醤油）','1個',10,17,52,380,'カップラーメン インスタント'],
   ['ポテトチップス','1袋 約60g',2.8,21,32,335,'ポテチ スナック お菓子'],
   ['アイス（バニラ）','1個 約100g',2,8,22,180,'アイスクリーム'],
-  ['ビール','350ml',1,0,11,140,'お酒 アルコール'],
-  ['コーラ','500ml',0,0,56,225,'ジュース 炭酸']
+  ['ビール','350ml',1,0,11,140,'お酒 アルコール 飲み物 ドリンク'],
+  ['ビール','500ml',1.4,0,15.5,200,'お酒 アルコール 飲み物 ドリンク'],
+  ['日本酒','1合 180ml',0.7,0,6.5,190,'清酒 お酒 アルコール 飲み物 ドリンク'],
+  ['日本酒','1杯 90ml',0.4,0,3.3,95,'清酒 お酒 アルコール 飲み物 ドリンク'],
+  ['三ツ矢サイダー','500ml',0,0,51,205,'サイダー 炭酸 ジュース 飲み物 ドリンク'],
+  ['三ツ矢サイダーZERO','500ml',0,0,2.5,0,'サイダー ゼロ 炭酸 飲み物 ドリンク'],
+  ['牛乳','500ml',16.5,19,24,335,'ミルク 飲み物 ドリンク'],
+  ['コーラ','500ml',0,0,56,225,'ジュース 炭酸 飲み物 ドリンク']
 ];
 function toHira(t){ return String(t).replace(/[\u30a1-\u30f6]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0x60); }).toLowerCase(); }
+function openFood(i){
+  var f = FOODS[i];
+  var st = document.getElementById('productStatus');
+  st.textContent = '一般的な目安値です（1回量：' + f[1] + '）。商品によって異なるので、必要なら数値を修正してください。'; st.className = 'status-msg ok';
+  showProductForm({ name: f[0] + '（' + f[1] + '）', basis: 'serving', p: f[2], f: f[3], c: f[4], k: f[5], amount: 1 });
+  document.getElementById('productForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+(function(){
+  var favs = ['牛乳|200ml','ビール|350ml','日本酒|1合 180ml','三ツ矢サイダー|500ml'];
+  var box = document.getElementById('favDrinks');
+  box.innerHTML = favs.map(function(k){
+    var n = k.split('|'); var idx = -1;
+    FOODS.forEach(function(f, i){ if(f[0] === n[0] && f[1] === n[1]) idx = i; });
+    return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(n[1]) + '</span></button>';
+  }).join('');
+  box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
+})();
 document.getElementById('foodSearch').addEventListener('input', function(){
   var q = toHira(this.value.trim());
   var box = document.getElementById('foodResults');
@@ -1900,15 +1925,7 @@ document.getElementById('foodSearch').addEventListener('input', function(){
   }).slice(0, 10);
   if(!hits.length){ box.innerHTML = '<div class="empty-note" style="width:100%; padding:8px 0;">見つかりませんでした。「栄養成分を手入力で追加」をお使いください。</div>'; return; }
   box.innerHTML = hits.map(function(x){ return '<button class="chip" data-i="' + x.i + '">' + escHtml(x.f[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(x.f[1]) + '</span></button>'; }).join('');
-  box.querySelectorAll('.chip').forEach(function(b){
-    b.addEventListener('click', function(){
-      var f = FOODS[parseInt(b.dataset.i, 10)];
-      var st = document.getElementById('productStatus');
-      st.textContent = '一般的な目安値です（1回量：' + f[1] + '）。商品によって異なるので、必要なら数値を修正してください。'; st.className = 'status-msg ok';
-      showProductForm({ name: f[0] + '（' + f[1] + '）', basis: 'serving', p: f[2], f: f[3], c: f[4], k: f[5], amount: 1 });
-      document.getElementById('productForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  });
+  box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
 });
 
 // ===== 日中／夜の配分 =====
