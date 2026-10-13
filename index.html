@@ -376,6 +376,8 @@
       <label>食品名で検索（目安値）</label>
       <input type="text" id="foodSearch" placeholder="例：おにぎり、サラダチキン、卵">
       <div class="chip-wrap" id="foodResults" style="margin-top:8px;"></div>
+      <label>よく食べるもの</label>
+      <div class="chip-wrap" id="favFoods"></div>
       <label>よく飲む飲み物（目安値）</label>
       <div class="chip-wrap" id="favDrinks"></div>
       <button class="secondary" id="manualBtn">栄養成分を手入力で追加</button>
@@ -1847,6 +1849,15 @@ renderMeals();
 // ===== 食品名検索（一般的な目安値：日本食品標準成分表などを元にした代表値） =====
 var FOODS = [
   // [名前, 1回量の説明, P, F, C, kcal, 別名]
+  ['オイコス ヨーグルト ピーチ（ダノン）','1カップ 113g',10.1,0,10.7,85,'ヨーグルト ダノン oikos'],
+  ['ミックスサンド（セブン-イレブン）','1個',11,14.3,29.8,288,'サンドイッチ サンド コンビニ セブン'],
+  ['ミックスサンド（ローソン）','1食',11.3,16,27.8,297,'サンドイッチ サンド コンビニ'],
+  ['ザバス MILK PROTEIN 脂肪0 ストロベリー','1本 200ml',20,0,6.9,107,'savas ミルクプロテイン プロテイン 明治 飲み物 ドリンク'],
+  ['ビッグマックセット（ポテトM・コーラM）','1セット',31.6,47.8,131,1079,'マクドナルド マック ハンバーガー 外食'],
+  ['ビッグマック（単品）','1個',26.1,28,42.1,525,'マクドナルド マック ハンバーガー 外食'],
+  ['マックフライポテト（M）','1個',5.5,19.8,52.4,409,'マクドナルド ポテト 外食'],
+  ['コカ・コーラ（Mサイズ）マクドナルド','1杯',0,0,36.5,145,'マクドナルド コーラ 飲み物 ドリンク 外食'],
+  ['焼魚牛小鉢定食（吉野家）','1人前',24.4,19.6,88.5,622,'吉野家 定食 外食 魚'],
   ['おにぎり（鮭）','1個 約100g',4.5,0.9,38,180,'おむすび 鮭 しゃけ サケ'],
   ['おにぎり（ツナマヨ）','1個 約110g',5,6,40,230,'おむすび ツナ マヨ'],
   ['おにぎり（梅・昆布）','1個 約100g',3.5,0.4,38,170,'おむすび うめ こんぶ'],
@@ -1917,6 +1928,16 @@ function openFood(i){
     var n = k.split('|'); var idx = -1;
     FOODS.forEach(function(f, i){ if(f[0] === n[0] && f[1] === n[1]) idx = i; });
     return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(n[1]) + '</span></button>';
+  }).join('');
+  box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
+})();
+(function(){
+  var favs = ['オイコス ヨーグルト ピーチ（ダノン）|1カップ 113g','ミックスサンド（セブン-イレブン）|1個','ミックスサンド（ローソン）|1食','ザバス MILK PROTEIN 脂肪0 ストロベリー|1本 200ml','ビッグマックセット（ポテトM・コーラM）|1セット','焼魚牛小鉢定食（吉野家）|1人前'];
+  var box = document.getElementById('favFoods');
+  box.innerHTML = favs.map(function(k){
+    var n = k.split('|'); var idx = -1;
+    FOODS.forEach(function(f, i){ if(f[0] === n[0] && f[1] === n[1]) idx = i; });
+    return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '</button>';
   }).join('');
   box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
 })();
