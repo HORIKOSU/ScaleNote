@@ -2030,7 +2030,7 @@ var splitOpen = {day:false, night:false};
 function fillDetail(id, list, emptyMsg){
   var el = document.getElementById(id);
   el.innerHTML = list.length ? list.map(function(x){
-    return '<div class="r"><i style="background:' + MEAL_PAL[x.i % MEAL_PAL.length] + ';"></i><span class="n">' + escHtml(x.m.name) + '</span><span class="e">' + (x.m.time || '時刻なし') + '</span><span class="k">' + Math.round(x.m.kcal) + 'kcal</span></div>';
+    return '<div class="r"><i style="background:' + MEAL_PAL[x.i % MEAL_PAL.length] + ';"></i><span class="n">' + escHtml(x.m.name) + '</span><span class="e">' + (x.tag ? x.tag + ' ' : '') + (x.m.time || '時刻なし') + '</span><span class="k">' + Math.round(x.m.kcal) + 'kcal</span></div>';
   }).join('') : '<div class="e">' + emptyMsg + '</div>';
 }
 function renderSplit(){
@@ -2055,9 +2055,9 @@ function renderSplit(){
     stackFill('splitDayBar', dayList, Math.max(cap, day.k), day.k > cap);
     daySub.textContent = day.k > cap ? '日中の目安を ' + Math.round(day.k - cap) + 'kcal 超えています（眠気が出やすくなる場合があります）' : 'あと ' + Math.round(cap - day.k) + 'kcal まで。タンパク質 ' + r1(day.p) + 'g（目安：50〜60g）';
     var total = day.k + night.k, left = t.calories - total;
-    nightVal.textContent = Math.round(night.k).toLocaleString() + ' kcal';
-    stackFill('splitNightBar', nightList, Math.max(t.calories - day.k, night.k), total > t.calories);
-    nightSub.textContent = left >= 0 ? '1日の目標まで、あと ' + Math.round(left).toLocaleString() + 'kcal 食べられます' : '1日の目標を ' + Math.round(-left).toLocaleString() + 'kcal 超えています';
+    nightVal.textContent = '合計 ' + Math.round(total).toLocaleString() + ' / ' + t.calories.toLocaleString() + ' kcal';
+    stackFill('splitNightBar', allItems, Math.max(t.calories, total), total > t.calories);
+    nightSub.textContent = '夜の分 ' + Math.round(night.k).toLocaleString() + 'kcal ／ ' + (left >= 0 ? '1日の目標まで、あと ' + Math.round(left).toLocaleString() + 'kcal 食べられます' : '1日の目標を ' + Math.round(-left).toLocaleString() + 'kcal 超えています');
   } else {
     dayVal.textContent = Math.round(day.k).toLocaleString() + ' kcal';
     stackFill('splitDayBar', [], 0, false);
@@ -2067,7 +2067,7 @@ function renderSplit(){
     nightSub.textContent = '';
   }
   fillDetail('splitDayDetail', dayList, '日中に記録した食べ物はありません');
-  fillDetail('splitNightDetail', nightList, '夜に記録した食べ物はありません（' + hr + '時以降の時刻で記録したものがここに入ります）');
+  fillDetail('splitNightDetail', allItems.map(function(x){ return {m:x.m, i:x.i, tag: nightList.indexOf(x) >= 0 ? '夜' : '日中'}; }), '食べ物はまだ記録されていません');
   document.getElementById('splitDayDetail').hidden = !splitOpen.day;
   document.getElementById('splitNightDetail').hidden = !splitOpen.night;
 }
