@@ -1504,7 +1504,7 @@ function renderMeals(){
   var prods = Object.keys(state.products).map(function(k){ return state.products[k]; }).sort(function(a,b){ return (b.used||0) - (a.used||0); }).slice(0, 30);
   if(!prods.length){ chips.innerHTML = '<div class="empty-note" style="width:100%;">登録した商品がここに並びます。</div>'; }
   else {
-    chips.innerHTML = prods.map(function(p){ return '<button class="chip" data-key="' + escHtml(p.key) + '">' + escHtml(p.name) + '</button>'; }).join('');
+    chips.innerHTML = prods.map(function(p){ return '<button class="chip" data-key="' + escHtml(p.key) + '">' + escHtml(p.name) + '<span class="chip-kcal">' + Math.round(calcFromProduct(p, p.lastAmount || (p.basis === '100g' ? 100 : 1)).kcal) + 'kcal</span></button>'; }).join('');
     chips.querySelectorAll('.chip').forEach(function(b){
       b.addEventListener('click', function(){
         var p = state.products[b.dataset.key]; if(!p) return;
@@ -2002,7 +2002,7 @@ document.getElementById('foodSearch').addEventListener('input', function(){
     return toHira(x.f[0] + ' ' + x.f[6]).indexOf(q) >= 0;
   }).slice(0, 10);
   if(!hits.length){ box.innerHTML = '<div class="empty-note" style="width:100%; padding:8px 0;">見つかりませんでした。「栄養成分を手入力で追加」をお使いください。</div>'; return; }
-  box.innerHTML = hits.map(function(x){ return '<button class="chip" data-i="' + x.i + '">' + escHtml(x.f[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(x.f[1]) + '</span></button>'; }).join('');
+  box.innerHTML = hits.map(function(x){ return '<button class="chip" data-i="' + x.i + '">' + escHtml(x.f[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(x.f[1]) + '</span><span class="chip-kcal">' + Math.round(x.f[5]) + 'kcal</span></button>'; }).join('');
   box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
 });
 
