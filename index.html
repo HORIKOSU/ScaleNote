@@ -135,6 +135,7 @@
   .split-detail .r .n{flex:1; min-width:0;}
   .split-detail .r .k{font-weight:700; white-space:nowrap;}
   .split-detail .e{color:var(--text-secondary);}
+  .chip-kcal{display:inline-block; margin-left:6px; font-weight:700; font-size:11px; color:var(--series-2);}
   .pfc-ratio{margin-top:10px; font-size:12px; color:var(--text-secondary); line-height:1.7;}
   .pfc-ratio b.ok{color:#3fa66a;} .pfc-ratio b.ng{color:#e5534b;} .pfc-ratio b.lo{color:#d97706;}
   .meal-pfc{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;}
@@ -1979,7 +1980,7 @@ function openFood(i){
   box.innerHTML = favs.map(function(k){
     var n = k.split('|'); var idx = -1;
     FOODS.forEach(function(f, i){ if(f[0] === n[0] && f[1] === n[1]) idx = i; });
-    return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(n[1]) + '</span></button>';
+    return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '<span style="font-weight:400; color:var(--text-secondary);"> ' + escHtml(n[1]) + '</span><span class="chip-kcal">' + Math.round(FOODS[idx][5]) + 'kcal</span></button>';
   }).join('');
   box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
 })();
@@ -1989,7 +1990,7 @@ function openFood(i){
   box.innerHTML = favs.map(function(k){
     var n = k.split('|'); var idx = -1;
     FOODS.forEach(function(f, i){ if(f[0] === n[0] && f[1] === n[1]) idx = i; });
-    return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '</button>';
+    return idx < 0 ? '' : '<button class="chip" data-i="' + idx + '">' + escHtml(n[0]) + '<span class="chip-kcal">' + Math.round(FOODS[idx][5]) + 'kcal</span></button>';
   }).join('');
   box.querySelectorAll('.chip').forEach(function(b){ b.addEventListener('click', function(){ openFood(parseInt(b.dataset.i, 10)); }); });
 })();
